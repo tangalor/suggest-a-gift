@@ -4,8 +4,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#2d5016">
-    <title>Idea regalo</title>
+    
+    <!-- SEO Meta Tags -->
+    <title>Idee Regalo Originali per Ogni Occasione | Suggerimenti Personalizzati</title>
+    <meta name="description" content="Trova il regalo perfetto per ogni persona e occasione. Scopri idee regalo originali per lui, lei, bambini, amici e colleghi. Suggerimenti personalizzati in base al budget e alle preferenze.">
+    <meta name="keywords" content="idee regalo, regali originali, regalo perfetto, regalo uomo, regalo donna, regalo bambini, regalo compleanno, regalo natale, suggerimenti regalo">
+    <meta name="author" content="Idea Regalo">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://idearegalo.online/">
+    
+    <!-- Open Graph Meta Tags (Facebook, LinkedIn) -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Idee Regalo Originali per Ogni Occasione">
+    <meta property="og:description" content="Trova il regalo perfetto per ogni persona e occasione. Suggerimenti personalizzati in base al budget e alle preferenze.">
+    <meta property="og:image" content="https://idearegalo.online/gift.png">
+    <meta property="og:url" content="https://idearegalo.online/">
+    <meta property="og:site_name" content="Idea Regalo">
+    <meta property="og:locale" content="it_IT">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Idee Regalo Originali per Ogni Occasione">
+    <meta name="twitter:description" content="Trova il regalo perfetto per ogni persona e occasione. Suggerimenti personalizzati in base al budget e alle preferenze.">
+    <meta name="twitter:image" content="https://idearegalo.online/gift.png">
+    
     <link rel="icon" type="image/png" href="gift.png">
+    <script async defer src="https://beampipe.io/js/tracker.js" data-beampipe-domain="idearegalo.online"></script>
+    
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Idea Regalo",
+      "url": "https://idearegalo.online/",
+      "description": "Trova il regalo perfetto per ogni persona e occasione con suggerimenti personalizzati",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://idearegalo.online/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    
     <style>
         * {
             margin: 0;
@@ -422,10 +463,11 @@
     </style>
 </head>
 <body>
-    <div class="container">
-                <div class="header">
+    <!-- Main Content -->
+    <main class="container" role="main">
+        <header class="header">
             <div class="gift-image">
-                <img src="gift.png" alt="Regalo">
+                <img src="gift.png" alt="Idea regalo - Confezione regalo con fiocco dorato">
             </div>
             <h1 class="h1-title"><!-- 🎁 -->Idea regalo</h1>
             <p style="color: #e0e0e0; font-size: 1.1em;">Trova il regalo perfetto per ogni occasione</p>
@@ -439,44 +481,48 @@
                 <button class="main-cta" id="mainCta">Dammi qualche idea regalo →</button>
             </div>
             <span class="cta-hint">Clicca ancora sul pulsante per ottenere altre simpatiche idee regalo, fatti ispirare quante volte vuoi.</span>
-        </div>
+        </header>
 
-        <div class="filters" id="filters">
+        <!-- Filters Section -->
+        <section class="filters" id="filters" aria-label="Filtri di ricerca">
             <div class="filter-section">
                 <span class="filter-label">Per chi è il regalo?</span>
-                <div class="filter-buttons" id="recipientFilters">
+                <div class="filter-buttons" id="recipientFilters" role="group" aria-label="Filtro destinatario">
                     <!-- I bottoni verranno generati dinamicamente -->
                 </div>
             </div>
             
             <div class="filter-section">
                 <span class="filter-label">Che tipo di regalo avevi in mente?</span>
-                <div class="filter-buttons" id="categoryFilters">
+                <div class="filter-buttons" id="categoryFilters" role="group" aria-label="Filtro categoria">
                     <!-- I bottoni verranno generati dinamicamente -->
                 </div>
             </div>
 
             <div class="filter-section">
                 <span class="filter-label">Quanto vorresti spendere?</span>
-                <div class="filter-buttons" id="priceFilters">
+                <div class="filter-buttons" id="priceFilters" role="group" aria-label="Filtro prezzo">
                     <!-- I bottoni verranno generati dinamicamente -->
                 </div>
             </div>
-        </div>
+        </section>
 
-        <div class="products-grid" id="productsGrid"></div>
-        <div class="no-results" id="noResults">Nessun prodotto trovato con i filtri selezionati</div>
+        <!-- Products Section -->
+        <section aria-label="Prodotti suggeriti">
+            <div class="products-grid" id="productsGrid" role="list"></div>
+            <div class="no-results" id="noResults" role="alert">Nessun prodotto trovato con i filtri selezionati</div>
+        </section>
 
         <p class="disclaimer">Alcune informazioni sui prodotti (come il prezzo) potrebbero non essere sempre esatti a causa di variazioni da parte del venditore, ma restano comunque indicativi.</p>
 
-        <div class="footer">
-            Made with <span class="heart">❤</span> and AI
-        </div>
-    </div>
+        <footer class="footer" role="contentinfo">
+            Made with <span class="heart" aria-label="amore">❤</span> and AI
+        </footer>
+    </main>
 
-    <div class="back-to-top" id="backToTop"></div>
+    <button class="back-to-top" id="backToTop" aria-label="Torna in cima alla pagina"></button>
 
-    <audio id="blipSound" preload="auto">
+    <audio id="blipSound" preload="auto" aria-hidden="true">
         <source src="blip.mp3" type="audio/mpeg">
     </audio>
 
@@ -643,12 +689,18 @@
                 filteredProducts.forEach(product => {
                     const card = document.createElement('div');
                     card.className = 'product-card show';
+                    card.setAttribute('role', 'listitem');
+                    card.setAttribute('itemscope', '');
+                    card.setAttribute('itemtype', 'https://schema.org/Product');
                     card.innerHTML = `
                         <div class="product-image">
-                            <img src="${product.imageLink}" alt="${product.title}">
+                            <img src="${product.imageLink}" alt="${product.title}" itemprop="image" loading="lazy">
                         </div>
-                        <div class="product-title">${product.title}</div>
-                        <div class="product-price">${product.price}</div>
+                        <h2 class="product-title" itemprop="name">${product.title}</h2>
+                        <div class="product-price" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+                            <meta itemprop="priceCurrency" content="EUR">
+                            <span itemprop="price">${product.price}</span>
+                        </div>
                     `;
                     card.onclick = () => {
                         // Riproduci il suono
