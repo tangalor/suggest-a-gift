@@ -101,17 +101,30 @@
             cursor: pointer;
             box-shadow: 0 6px 20px rgba(211, 47, 47, 0.4);
             transition: all 0.2s ease;
+            position: relative;
         }
 
         .main-cta:hover {
             background: #b71c1c;
             transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(211, 47, 47, 0.6);
+            box-shadow: 0 8px 25px rgba(211, 47, 47, 0.6), 0 0 30px rgba(255, 215, 0, 0.8);
+            border: 2px solid #ffd700;
         }
 
         .main-cta:active {
             transform: translateY(1px);
             box-shadow: 0 3px 12px rgba(211, 47, 47, 0.4);
+        }
+
+        .cta-hint {
+            color: #ffd700;
+            font-size: 0.85em;
+            margin-top: 10px;
+            text-align: center;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
         }
 
         .filter-toggle {
@@ -319,6 +332,7 @@
                     </svg>
                 </button>
             </div>
+            <p class="cta-hint">Clicca ancora sul pulsante per ottenere altre simpatiche idee regalo. Fatti ispirare quante volte vuoi.</p>
         </div>
 
         <div class="filters" id="filters">
@@ -354,6 +368,7 @@
         let currentRecipient = 'all';
         let currentCategory = 'all';
         let currentPriceRange = 'all';
+        let showRandomNine = false;
 
         // Carica i prodotti dal file JSON
         async function loadProducts() {
@@ -453,6 +468,9 @@
                 currentPriceRange = value;
             }
             
+            // Attiva sempre la modalità random quando si cliccano i filtri
+            showRandomNine = true;
+            
             // Renderizza prodotti filtrati
             renderProducts();
         }
@@ -463,7 +481,7 @@
             const noResults = document.getElementById('noResults');
             grid.innerHTML = '';
             
-            const filteredProducts = products.filter(product => {
+            let filteredProducts = products.filter(product => {
                 const recipientMatch = currentRecipient === 'all' || product.recipient === currentRecipient;
                 const categoryMatch = currentCategory === 'all' || product.category === currentCategory;
                 
@@ -476,6 +494,14 @@
                 
                 return recipientMatch && categoryMatch && priceMatch;
             });
+
+            // Se è attiva la modalità random, mostra solo 9 prodotti casuali
+            if (showRandomNine && filteredProducts.length > 9) {
+                // Shuffle array e prendi i primi 9
+                filteredProducts = filteredProducts
+                    .sort(() => Math.random() - 0.5)
+                    .slice(0, 9);
+            }
 
             if (filteredProducts.length === 0) {
                 noResults.classList.add('show');
@@ -515,6 +541,12 @@
 
         // Gestione bottone CTA principale
         document.getElementById('mainCta').addEventListener('click', function() {
+            // Attiva la modalità random di 9 prodotti
+            showRandomNine = true;
+            
+            // Renderizza con 9 prodotti random
+            renderProducts();
+            
             // Scroll alla griglia prodotti
             document.getElementById('productsGrid').scrollIntoView({ 
                 behavior: 'smooth',
