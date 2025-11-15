@@ -192,7 +192,7 @@
 
         .filter-label {
             font-weight: bold;
-            color: #333;
+            color: #2d5016;
             margin-bottom: 12px;
             display: block;
             font-size: 1.1em;
@@ -308,7 +308,7 @@
             <div class="gift-image">
                 <img src="gift.png" alt="Regalo">
             </div>
-            <h1>🎁 Suggest a Gift</h1>
+            <h1><!-- 🎁 -->Idee regali per tutti</h1>
             <p style="color: #e0e0e0; font-size: 1.1em;">Trova il regalo perfetto per ogni occasione</p>
             
             <div class="action-buttons">
@@ -335,6 +335,13 @@
                     <!-- I bottoni verranno generati dinamicamente -->
                 </div>
             </div>
+
+            <div class="filter-section">
+                <span class="filter-label">Quanto vorresti spendere?</span>
+                <div class="filter-buttons" id="priceFilters">
+                    <!-- I bottoni verranno generati dinamicamente -->
+                </div>
+            </div>
         </div>
 
         <div class="products-grid" id="productsGrid"></div>
@@ -346,6 +353,7 @@
         let products = [];
         let currentRecipient = 'all';
         let currentCategory = 'all';
+        let currentPriceRange = 'all';
 
         // Carica i prodotti dal file JSON
         async function loadProducts() {
@@ -393,6 +401,30 @@
                 categoryFilters.appendChild(btn);
             });
 
+            // Genera bottoni per le fasce di prezzo
+            const priceRanges = [
+                { label: 'Tutti', value: 'all' },
+                { label: '0-10€', value: '0-10' },
+                { label: '11-30€', value: '11-30' },
+                { label: '31-50€', value: '31-50' },
+                { label: '51-100€', value: '51-100' },
+                { label: '101-300€', value: '101-300' },
+                { label: '301-500€', value: '301-500' },
+                { label: 'Oltre 500€', value: '501-999999' }
+            ];
+
+            const priceFilters = document.getElementById('priceFilters');
+            priceFilters.innerHTML = '';
+            priceRanges.forEach(range => {
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn' + (range.value === 'all' ? ' active' : '');
+                btn.setAttribute('data-type', 'price');
+                btn.setAttribute('data-value', range.value);
+                btn.textContent = range.label;
+                btn.addEventListener('click', handleFilterClick);
+                priceFilters.appendChild(btn);
+            });
+
             // Aggiungi event listener al bottone "Tutti" e "Tutte"
             document.querySelectorAll('[data-value="all"]').forEach(btn => {
                 btn.addEventListener('click', handleFilterClick);
@@ -417,6 +449,8 @@
                 currentRecipient = value;
             } else if (type === 'category') {
                 currentCategory = value;
+            } else if (type === 'price') {
+                currentPriceRange = value;
             }
             
             // Renderizza prodotti filtrati
@@ -432,7 +466,15 @@
             const filteredProducts = products.filter(product => {
                 const recipientMatch = currentRecipient === 'all' || product.recipient === currentRecipient;
                 const categoryMatch = currentCategory === 'all' || product.category === currentCategory;
-                return recipientMatch && categoryMatch;
+                
+                // Filtro per fascia di prezzo
+                let priceMatch = true;
+                if (currentPriceRange !== 'all') {
+                    const [min, max] = currentPriceRange.split('-').map(Number);
+                    priceMatch = product.price >= min && product.price <= max;
+                }
+                
+                return recipientMatch && categoryMatch && priceMatch;
             });
 
             if (filteredProducts.length === 0) {
