@@ -82,6 +82,10 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
+        .h1-title::after {
+            content: " per tutti";
+        }
+
         .header p {
             color: #e0e0e0 !important;
             font-size: 1.1em !important;
@@ -398,6 +402,10 @@
         }
 
         @media (max-width: 768px) {
+            .h1-title::after {
+                content: "";
+            }
+
             .filter-toggle {
                 width: 45px;
                 height: 45px;
@@ -419,7 +427,7 @@
             <div class="gift-image">
                 <img src="gift.png" alt="Regalo">
             </div>
-            <h1><!-- 🎁 -->Idee regali per tutti</h1>
+            <h1 class="h1-title"><!-- 🎁 -->Idee regali</h1>
             <p style="color: #e0e0e0; font-size: 1.1em;">Trova il regalo perfetto per ogni occasione</p>
             
             <div class="action-buttons">
