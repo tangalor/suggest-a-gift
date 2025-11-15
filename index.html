@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suggest a Gift - Idee Regalo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 40px 20px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #764ba2;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .gift-image {
+            width: 300px;
+            height: 300px;
+            margin: 0 auto 30px;
+        }
+
+        .gift-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.15));
+        }
+
+        .filters {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        .filter-section {
+            margin-bottom: 20px;
+        }
+
+        .filter-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .filter-label {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 12px;
+            display: block;
+            font-size: 1.1em;
+        }
+
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+            padding: 20px 0;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            display: none;
+        }
+
+        .product-card.show {
+            display: block;
+        }
+
+        .product-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 200px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 12px;
+            background: #f5f5f5;
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .product-title {
+            font-size: 1.1em;
+            color: #333;
+            margin-bottom: 8px;
+            font-weight: bold;
+            min-height: 50px;
+        }
+
+        .product-price {
+            font-size: 1.3em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .product-price::before {
+            content: '€ ';
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: white;
+            font-size: 1.3em;
+            display: none;
+        }
+
+        .no-results.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="gift-image">
+                <img src="https://cdn-icons-png.flaticon.com/512/3050/3050158.png" alt="Regalo">
+            </div>
+            <h1>🎁 Suggest a Gift</h1>
+            <p style="color: #666; font-size: 1.1em;">Trova il regalo perfetto per ogni occasione</p>
+        </div>
+
+        <div class="filters">
+            <div class="filter-section">
+                <span class="filter-label">Destinatario:</span>
+                <div class="filter-buttons" id="recipientFilters">
+                    <button class="filter-btn active" data-type="recipient" data-value="all">Tutti</button>
+                    <button class="filter-btn" data-type="recipient" data-value="Uomo">Uomo</button>
+                    <button class="filter-btn" data-type="recipient" data-value="Donna">Donna</button>
+                    <button class="filter-btn" data-type="recipient" data-value="Bambino">Bambino</button>
+                    <button class="filter-btn" data-type="recipient" data-value="Unisex">Unisex</button>
+                </div>
+            </div>
+            
+            <div class="filter-section">
+                <span class="filter-label">Categoria:</span>
+                <div class="filter-buttons" id="categoryFilters">
+                    <button class="filter-btn active" data-type="category" data-value="all">Tutte</button>
+                    <button class="filter-btn" data-type="category" data-value="Casa">Casa</button>
+                    <button class="filter-btn" data-type="category" data-value="Libri">Libri</button>
+                    <button class="filter-btn" data-type="category" data-value="Tecnologia">Tecnologia</button>
+                    <button class="filter-btn" data-type="category" data-value="Moda">Moda</button>
+                    <button class="filter-btn" data-type="category" data-value="Sport">Sport</button>
+                    <button class="filter-btn" data-type="category" data-value="Bellezza">Bellezza</button>
+                    <button class="filter-btn" data-type="category" data-value="Giochi">Giochi</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="products-grid" id="productsGrid"></div>
+        <div class="no-results" id="noResults">Nessun prodotto trovato con i filtri selezionati</div>
+    </div>
+
+    <script>
+        // Variabile per i prodotti caricati dal file JSON esterno
+        let products = [];
+        let currentRecipient = 'all';
+        let currentCategory = 'all';
+
+        // Carica i prodotti dal file JSON
+        async function loadProducts() {
+            try {
+                const response = await fetch('products.json');
+                products = await response.json();
+                renderProducts();
+            } catch (error) {
+                console.error('Errore nel caricamento dei prodotti:', error);
+                document.getElementById('noResults').textContent = 'Errore nel caricamento dei prodotti';
+                document.getElementById('noResults').classList.add('show');
+            }
+        }
+
+        // Render prodotti
+        function renderProducts() {
+            const grid = document.getElementById('productsGrid');
+            const noResults = document.getElementById('noResults');
+            grid.innerHTML = '';
+            
+            const filteredProducts = products.filter(product => {
+                const recipientMatch = currentRecipient === 'all' || product.recipient === currentRecipient;
+                const categoryMatch = currentCategory === 'all' || product.category === currentCategory;
+                return recipientMatch && categoryMatch;
+            });
+
+            if (filteredProducts.length === 0) {
+                noResults.classList.add('show');
+                grid.style.display = 'none';
+            } else {
+                noResults.classList.remove('show');
+                grid.style.display = 'grid';
+                
+                filteredProducts.forEach(product => {
+                    const card = document.createElement('div');
+                    card.className = 'product-card show';
+                    card.innerHTML = `
+                        <div class="product-image">
+                            <img src="${product.imageLink}" alt="${product.title}">
+                        </div>
+                        <div class="product-title">${product.title}</div>
+                        <div class="product-price">${product.price}</div>
+                    `;
+                    card.onclick = () => {
+                        if (product.link !== '#') {
+                            window.open(product.link, '_blank');
+                        }
+                    };
+                    grid.appendChild(card);
+                });
+            }
+        }
+
+        // Gestione filtri
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const type = this.dataset.type;
+                const value = this.dataset.value;
+                
+                // Deseleziona tutti i bottoni dello stesso tipo
+                document.querySelectorAll(`[data-type="${type}"]`).forEach(b => {
+                    b.classList.remove('active');
+                });
+                
+                // Seleziona il bottone cliccato
+                this.classList.add('active');
+                
+                // Aggiorna filtri
+                if (type === 'recipient') {
+                    currentRecipient = value;
+                } else if (type === 'category') {
+                    currentCategory = value;
+                }
+                
+                // Renderizza prodotti filtrati
+                renderProducts();
+            });
+        });
+
+        // Carica i prodotti all'avvio della pagina
+        loadProducts();
+    </script>
+</body>
+</html>
