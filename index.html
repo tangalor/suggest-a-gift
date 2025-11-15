@@ -390,7 +390,7 @@
 
             // Genera bottoni per le categorie
             const categoryFilters = document.getElementById('categoryFilters');
-            categoryFilters.innerHTML = '<button class="filter-btn active" data-type="category" data-value="all">Tutte</button>';
+            categoryFilters.innerHTML = '<button class="filter-btn active" data-type="category" data-value="all">Non saprei</button>';
             categories.forEach(category => {
                 const btn = document.createElement('button');
                 btn.className = 'filter-btn';
@@ -403,7 +403,7 @@
 
             // Genera bottoni per le fasce di prezzo
             const priceRanges = [
-                { label: 'Tutti', value: 'all' },
+                { label: 'Qualsiasi prezzo', value: 'all' },
                 { label: '0-10€', value: '0-10' },
                 { label: '11-30€', value: '11-30' },
                 { label: '31-50€', value: '31-50' },
