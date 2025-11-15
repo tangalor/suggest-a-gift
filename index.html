@@ -445,6 +445,10 @@
 
     <div class="back-to-top" id="backToTop"></div>
 
+    <audio id="blipSound" preload="auto">
+        <source src="blip.mp3" type="audio/mpeg">
+    </audio>
+
     <script>
         // Variabile per i prodotti caricati dal file JSON esterno
         let products = [];
@@ -452,6 +456,13 @@
         let currentCategory = 'all';
         let currentPriceRange = 'all';
         let showRandomNine = false;
+
+        // Funzione per riprodurre il suono blip
+        function playBlip() {
+            const sound = document.getElementById('blipSound');
+            sound.currentTime = 0;
+            sound.play().catch(e => console.log('Audio play failed:', e));
+        }
 
         // Carica i prodotti dal file JSON
         async function loadProducts() {
@@ -533,6 +544,9 @@
 
         // Gestione click sui filtri
         function handleFilterClick() {
+            // Riproduci il suono
+            playBlip();
+            
             const type = this.dataset.type;
             const value = this.dataset.value;
             
@@ -606,6 +620,9 @@
                         <div class="product-price">${product.price}</div>
                     `;
                     card.onclick = () => {
+                        // Riproduci il suono
+                        playBlip();
+                        
                         if (product.link !== '#') {
                             window.open(product.link, '_blank');
                         }
@@ -626,6 +643,9 @@
 
         // Gestione bottone CTA principale
         document.getElementById('mainCta').addEventListener('click', function() {
+            // Riproduci il suono
+            playBlip();
+            
             // Attiva la modalità random di 9 prodotti
             showRandomNine = true;
             
