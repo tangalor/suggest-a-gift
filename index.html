@@ -398,11 +398,6 @@
                 font-size: 2em;
             }
 
-            .header h1::after {
-                content: "Idee regalo facili";
-                display: block;
-            }
-
             .header h1 {
                 font-size: 0;
             }
@@ -690,9 +685,13 @@
         // Gestione visibilità bottone back to top basata sullo scroll
         window.addEventListener('scroll', function() {
             const backToTop = document.getElementById('backToTop');
-            const scrollPercentage = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+            const productsGrid = document.getElementById('productsGrid');
+            const productsGridTop = productsGrid.getBoundingClientRect().top;
+            const viewportHeight = window.innerHeight;
             
-            if (scrollPercentage > 70) {
+            // Mostra il bottone quando la griglia prodotti è visibile (entra nel viewport)
+            // Nascondi quando siamo vicini al top (scroll < 300px)
+            if (productsGridTop < viewportHeight && window.scrollY > 300) {
                 backToTop.classList.add('visible');
             } else {
                 backToTop.classList.remove('visible');
