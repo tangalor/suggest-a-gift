@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Suggest a Gift - Idee Regalo</title>
+    <link rel="icon" type="image/png" href="gift.png">
     <style>
         * {
             margin: 0;
@@ -116,15 +117,67 @@
             box-shadow: 0 3px 12px rgba(211, 47, 47, 0.4);
         }
 
-        .cta-hint {
+            .cta-hint {
+                color: #ffd700;
+                font-size: 0.85rem;
+                margin-top: 0.5rem;
+                text-align: center;
+            }        
+
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #2d5016, #1a3a0f);
+            border: 3px solid #ffd700;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .back-to-top:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .back-to-top::before {
+            content: "↑";
             color: #ffd700;
-            font-size: 0.85em;
-            margin-top: 10px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .footer {
             text-align: center;
-            max-width: 500px;
-            margin-left: auto;
-            margin-right: auto;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            padding: 40px 20px 20px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .heart {
+            display: inline-block;
+            color: #ff0000;
+            animation: heartbeat 1.5s ease-in-out infinite;
+            font-size: 1.1em;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% {
+                transform: scale(1);
+            }
+            10%, 30% {
+                transform: scale(1.3);
+            }
+            20%, 40% {
+                transform: scale(1);
+            }
         }
 
         .filter-toggle {
@@ -360,7 +413,13 @@
 
         <div class="products-grid" id="productsGrid"></div>
         <div class="no-results" id="noResults">Nessun prodotto trovato con i filtri selezionati</div>
+
+        <div class="footer">
+            Made with <span class="heart">❤</span> and AI
+        </div>
     </div>
+
+    <div class="back-to-top" id="backToTop"></div>
 
     <script>
         // Variabile per i prodotti caricati dal file JSON esterno
@@ -376,6 +435,8 @@
                 const response = await fetch('products.json');
                 products = await response.json();
                 initializeFilters();
+                // Attiva la modalità random anche al caricamento iniziale
+                showRandomNine = true;
                 renderProducts();
             } catch (error) {
                 console.error('Errore nel caricamento dei prodotti:', error);
@@ -551,6 +612,14 @@
             document.getElementById('productsGrid').scrollIntoView({ 
                 behavior: 'smooth',
                 block: 'start'
+            });
+        });
+
+        // Gestione bottone back to top
+        document.getElementById('backToTop').addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
             });
         });
     </script>
