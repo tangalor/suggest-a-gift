@@ -187,27 +187,16 @@
 
         <div class="filters">
             <div class="filter-section">
-                <span class="filter-label">Destinatario:</span>
+                <span class="filter-label">Per chi è il regalo?</span>
                 <div class="filter-buttons" id="recipientFilters">
-                    <button class="filter-btn active" data-type="recipient" data-value="all">Tutti</button>
-                    <button class="filter-btn" data-type="recipient" data-value="Uomo">Uomo</button>
-                    <button class="filter-btn" data-type="recipient" data-value="Donna">Donna</button>
-                    <button class="filter-btn" data-type="recipient" data-value="Bambino">Bambino</button>
-                    <button class="filter-btn" data-type="recipient" data-value="Unisex">Unisex</button>
+                    <!-- I bottoni verranno generati dinamicamente -->
                 </div>
             </div>
             
             <div class="filter-section">
-                <span class="filter-label">Categoria:</span>
+                <span class="filter-label">Che tipo di regalo avevi in mente?</span>
                 <div class="filter-buttons" id="categoryFilters">
-                    <button class="filter-btn active" data-type="category" data-value="all">Tutte</button>
-                    <button class="filter-btn" data-type="category" data-value="Casa">Casa</button>
-                    <button class="filter-btn" data-type="category" data-value="Libri">Libri</button>
-                    <button class="filter-btn" data-type="category" data-value="Tecnologia">Tecnologia</button>
-                    <button class="filter-btn" data-type="category" data-value="Moda">Moda</button>
-                    <button class="filter-btn" data-type="category" data-value="Sport">Sport</button>
-                    <button class="filter-btn" data-type="category" data-value="Bellezza">Bellezza</button>
-                    <button class="filter-btn" data-type="category" data-value="Giochi">Giochi</button>
+                    <!-- I bottoni verranno generati dinamicamente -->
                 </div>
             </div>
         </div>
@@ -227,12 +216,75 @@
             try {
                 const response = await fetch('products.json');
                 products = await response.json();
+                initializeFilters();
                 renderProducts();
             } catch (error) {
                 console.error('Errore nel caricamento dei prodotti:', error);
                 document.getElementById('noResults').textContent = 'Errore nel caricamento dei prodotti';
                 document.getElementById('noResults').classList.add('show');
             }
+        }
+
+        // Inizializza i filtri in base ai prodotti caricati
+        function initializeFilters() {
+            // Estrai tutte le categorie e destinatari unici
+            const categories = [...new Set(products.map(p => p.category))].sort();
+            const recipients = [...new Set(products.map(p => p.recipient))].sort();
+
+            // Genera bottoni per i destinatari
+            const recipientFilters = document.getElementById('recipientFilters');
+            recipientFilters.innerHTML = '<button class="filter-btn active" data-type="recipient" data-value="all">Tutti</button>';
+            recipients.forEach(recipient => {
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn';
+                btn.setAttribute('data-type', 'recipient');
+                btn.setAttribute('data-value', recipient);
+                btn.textContent = recipient;
+                btn.addEventListener('click', handleFilterClick);
+                recipientFilters.appendChild(btn);
+            });
+
+            // Genera bottoni per le categorie
+            const categoryFilters = document.getElementById('categoryFilters');
+            categoryFilters.innerHTML = '<button class="filter-btn active" data-type="category" data-value="all">Tutte</button>';
+            categories.forEach(category => {
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn';
+                btn.setAttribute('data-type', 'category');
+                btn.setAttribute('data-value', category);
+                btn.textContent = category;
+                btn.addEventListener('click', handleFilterClick);
+                categoryFilters.appendChild(btn);
+            });
+
+            // Aggiungi event listener al bottone "Tutti" e "Tutte"
+            document.querySelectorAll('[data-value="all"]').forEach(btn => {
+                btn.addEventListener('click', handleFilterClick);
+            });
+        }
+
+        // Gestione click sui filtri
+        function handleFilterClick() {
+            const type = this.dataset.type;
+            const value = this.dataset.value;
+            
+            // Deseleziona tutti i bottoni dello stesso tipo
+            document.querySelectorAll(`[data-type="${type}"]`).forEach(b => {
+                b.classList.remove('active');
+            });
+            
+            // Seleziona il bottone cliccato
+            this.classList.add('active');
+            
+            // Aggiorna filtri
+            if (type === 'recipient') {
+                currentRecipient = value;
+            } else if (type === 'category') {
+                currentCategory = value;
+            }
+            
+            // Renderizza prodotti filtrati
+            renderProducts();
         }
 
         // Render prodotti
@@ -273,32 +325,6 @@
                 });
             }
         }
-
-        // Gestione filtri
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const type = this.dataset.type;
-                const value = this.dataset.value;
-                
-                // Deseleziona tutti i bottoni dello stesso tipo
-                document.querySelectorAll(`[data-type="${type}"]`).forEach(b => {
-                    b.classList.remove('active');
-                });
-                
-                // Seleziona il bottone cliccato
-                this.classList.add('active');
-                
-                // Aggiorna filtri
-                if (type === 'recipient') {
-                    currentRecipient = value;
-                } else if (type === 'category') {
-                    currentCategory = value;
-                }
-                
-                // Renderizza prodotti filtrati
-                renderProducts();
-            });
-        });
 
         // Carica i prodotti all'avvio della pagina
         loadProducts();
