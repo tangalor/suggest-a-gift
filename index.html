@@ -89,6 +89,7 @@
             align-items: center;
             gap: 15px;
             margin-top: 20px;
+            margin-bottom: 20px;
         }
 
         .main-cta {
@@ -122,6 +123,11 @@
                 font-size: 0.85rem;
                 margin-top: 1.5rem;
                 text-align: center;
+                display: none;
+            }
+
+            .cta-hint.show {
+                display: block;
             }        
 
         .back-to-top {
@@ -183,6 +189,8 @@
         .filter-toggle {
             width: 50px;
             height: 50px;
+            min-width: 50px;
+            min-height: 50px;
             background: rgba(255, 255, 255, 0.9);
             border: 2px solid #ffd700;
             border-radius: 50%;
@@ -192,6 +200,7 @@
             justify-content: center;
             transition: all 0.3s ease;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            flex-shrink: 0;
         }
 
         .filter-toggle:hover {
@@ -366,6 +375,21 @@
         .no-results.show {
             display: block;
         }
+
+        @media (max-width: 768px) {
+            .filter-toggle {
+                width: 45px;
+                height: 45px;
+                min-width: 45px;
+                min-height: 45px;
+                padding: 0;
+            }
+
+            .filter-toggle svg {
+                width: 20px;
+                height: 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -385,7 +409,7 @@
                     </svg>
                 </button>
             </div>
-            <span class="cta-hint">Clicca ancora sul pulsante per ottenere altre simpatiche idee regalo.<br\>Fatti ispirare quante volte vuoi.</span>
+            <span class="cta-hint">Clicca ancora sul pulsante per ottenere altre simpatiche idee regalo, fatti ispirare quante volte vuoi.</span>
         </div>
 
         <div class="filters" id="filters">
@@ -604,6 +628,9 @@
         document.getElementById('mainCta').addEventListener('click', function() {
             // Attiva la modalità random di 9 prodotti
             showRandomNine = true;
+            
+            // Mostra il messaggio hint
+            document.querySelector('.cta-hint').classList.add('show');
             
             // Renderizza con 9 prodotti random
             renderProducts();
