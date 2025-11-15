@@ -140,12 +140,16 @@
             border: 3px solid #ffd700;
             border-radius: 50%;
             cursor: pointer;
-            display: flex;
+            display: none;
             align-items: center;
             justify-content: center;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
             transition: all 0.3s ease;
             z-index: 1000;
+        }
+
+        .back-to-top.visible {
+            display: flex;
         }
 
         .back-to-top:hover {
@@ -389,6 +393,19 @@
                 width: 20px;
                 height: 20px;
             }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .header h1::after {
+                content: "Idee regalo facili";
+                display: block;
+            }
+
+            .header h1 {
+                font-size: 0;
+            }
         }
     </style>
 </head>
@@ -402,7 +419,7 @@
             <p style="color: #e0e0e0; font-size: 1.1em;">Trova il regalo perfetto per ogni occasione</p>
             
             <div class="action-buttons">
-                <button class="main-cta" id="mainCta">Dammi qualche idea regalo</button>
+                <button class="main-cta" id="mainCta">Dammi qualche idea regalo →</button>
                 <button class="filter-toggle" id="filterToggle" title="Mostra/Nascondi Filtri">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                         <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/>
@@ -668,6 +685,18 @@
                 top: 0,
                 behavior: 'smooth'
             });
+        });
+
+        // Gestione visibilità bottone back to top basata sullo scroll
+        window.addEventListener('scroll', function() {
+            const backToTop = document.getElementById('backToTop');
+            const scrollPercentage = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+            
+            if (scrollPercentage > 70) {
+                backToTop.classList.add('visible');
+            } else {
+                backToTop.classList.remove('visible');
+            }
         });
     </script>
 </body>
