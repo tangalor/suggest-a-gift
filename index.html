@@ -750,7 +750,25 @@
             }
             
             const filters = document.getElementById('filters');
+            const isCurrentlyVisible = filters.classList.contains('show');
+            
             filters.classList.toggle('show');
+            
+            // Se i filtri si stanno aprendo, scrolla verso di loro
+            if (!isCurrentlyVisible) {
+                setTimeout(() => {
+                    filters.scrollIntoView({ 
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }, 100);
+            } else {
+                // Se i filtri si stanno chiudendo, torna al top
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            }
         });
 
         // Gestione bottone CTA principale
