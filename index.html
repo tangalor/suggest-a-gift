@@ -271,10 +271,16 @@
             transform: rotate(90deg);
         }
 
+        .filter-toggle.active {
+            background: #ffd700;
+            transform: rotate(180deg);
+        }
+
         .filter-toggle svg {
             width: 24px;
             height: 24px;
             fill: #2d5016;
+            transition: transform 0.3s ease;
         }
 
         .filters {
@@ -753,6 +759,7 @@
             const isCurrentlyVisible = filters.classList.contains('show');
             
             filters.classList.toggle('show');
+            this.classList.toggle('active');
             
             // Se i filtri si stanno aprendo, scrolla verso di loro
             if (!isCurrentlyVisible) {
