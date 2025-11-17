@@ -266,7 +266,7 @@
             flex-shrink: 0;
         }
 
-        .filter-toggle:hover {
+        .filter-toggle:hover:not(.active) {
             background: #ffd700;
             transform: rotate(90deg);
         }
@@ -274,6 +274,10 @@
         .filter-toggle.active {
             background: #ffd700;
             transform: rotate(180deg);
+        }
+
+        .filter-toggle.active:hover {
+            background: #ffed4e;
         }
 
         .filter-toggle svg {
