@@ -459,63 +459,10 @@
         }
 
         /* Pulsante iubenda preferenze: nascosto finché non si arriva in fondo */
-        #iubenda-cs-preferences-link {
-        position: fixed !important;
-        left: 16px !important;
-        bottom: 16px !important;
-        background: #2d5016 !important;
-        color: #ffd700 !important;
-        border: 2px solid #ffd700 !important;
-        border-radius: 40px !important;
-        padding: 12px 22px !important;
-        font-size: 14px !important;
-        font-weight: 600 !important;
-        letter-spacing: .4px;
-        line-height: 1.1;
-        display: flex !important;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        text-decoration: none !important;
-        box-shadow: 0 4px 12px rgba(45,80,22,.45), 0 0 0 3px rgba(255,215,0,.35) !important;
-        cursor: pointer;
-        z-index: 250 !important;
-
-        /* Stato nascosto iniziale */
-        opacity: 0;
-        pointer-events: none;
-        transform: translateY(20px);
-        transition: opacity .4s ease, transform .4s ease, box-shadow .25s ease;
+        .iubenda-tp-alert-btn[data-tp-float][data-tp-float=bottom-right], .iubenda-tp-alert-btn[data-tp-float][data-tp-float=top-right], .iubenda-tp-btn:not(.iubenda-floatable-tb-btn)[data-tp-float][data-tp-float=bottom-right], .iubenda-tp-btn:not(.iubenda-floatable-tb-btn)[data-tp-float][data-tp-float=top-right], .iubenda-uspr-btn[data-tp-float][data-tp-float=bottom-right], .iubenda-uspr-btn[data-tp-float][data-tp-float=top-right] {
+            left: 0 !important;
         }
 
-        /* Quando l'utente ha scrollato vicino al fondo (classe aggiunta via JS) */
-        body.show-cookie-btn #iubenda-cs-preferences-link {
-        opacity: 1;
-        pointer-events: auto;
-        transform: translateY(0);
-        }
-
-        /* Hover / Focus */
-        body.show-cookie-btn #iubenda-cs-preferences-link:hover,
-        body.show-cookie-btn #iubenda-cs-preferences-link:focus {
-        box-shadow: 0 6px 16px rgba(45,80,22,.55), 0 0 0 3px rgba(255,215,0,.55) !important;
-        outline: none;
-        }
-
-        /* Focus visibile per accessibilità */
-        body.show-cookie-btn #iubenda-cs-preferences-link:focus {
-        box-shadow: 0 0 0 3px #ffd700, 0 0 0 6px #2d5016 !important;
-        }
-
-        /* Mobile adattamenti */
-        @media (max-width: 480px) {
-        #iubenda-cs-preferences-link {
-            padding: 10px 16px !important;
-            font-size: 13px !important;
-            left: 12px !important;
-            bottom: 12px !important;
-        }
-        }
     </style>
 </head>
 <body>
