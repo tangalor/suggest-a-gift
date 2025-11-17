@@ -173,10 +173,6 @@
                 font-size: 0.85rem;
                 margin-top: 1.5rem;
                 text-align: center;
-                display: none;
-            }
-
-            .cta-hint.show {
                 display: block;
             }
 
@@ -480,7 +476,7 @@
                 </button>
                 <button class="main-cta" id="mainCta">Dammi qualche idea regalo →</button>
             </div>
-            <span class="cta-hint">Clicca ancora sul pulsante per ottenere altre simpatiche idee regalo, fatti ispirare quante volte vuoi.</span>
+            <span class="cta-hint" id="ctaHint">Clicca per ottenere nuove idee regalo, trova l'ispirazione giusta per te.</span>
         </header>
 
         <!-- Filters Section -->
@@ -737,8 +733,8 @@
             // Attiva la modalità random di 9 prodotti
             showRandomNine = true;
             
-            // Mostra il messaggio hint
-            document.querySelector('.cta-hint').classList.add('show');
+            // Cambia il messaggio hint
+            document.getElementById('ctaHint').textContent = 'Clicca ancora sul pulsante per ottenere altre simpatiche idee regalo, fatti ispirare quante volte vuoi.';
             
             // Renderizza con 9 prodotti random
             renderProducts();
