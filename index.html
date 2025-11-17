@@ -698,6 +698,14 @@
                     card.setAttribute('role', 'listitem');
                     card.setAttribute('itemscope', '');
                     card.setAttribute('itemtype', 'https://schema.org/Product');
+                    
+                    // Crea data-track dal titolo (primi 25 caratteri, lowercase, slug format)
+                    const trackValue = 'product-' + product.title.substring(0, 25).toLowerCase()
+                        .replace(/[^a-z0-9\s]/g, '')
+                        .replace(/\s+/g, '-')
+                        .replace(/-+$/, '');
+                    card.setAttribute('data-track', trackValue);
+                    
                     card.innerHTML = `
                         <div class="product-image">
                             <img src="${product.imageLink}" alt="${product.title}" itemprop="image" loading="lazy">
@@ -709,6 +717,11 @@
                         </div>
                     `;
                     card.onclick = () => {
+                        // Track evento Beampipe
+                        if (card.dataset.track && window.beampipe) {
+                            window.beampipe(card.dataset.track);
+                        }
+                        
                         // Riproduci il suono
                         playBlip();
                         
