@@ -719,9 +719,21 @@
             if (giftParam !== null) {
                 const giftIndex = parseInt(giftParam, 10);
                 
-                if (!isNaN(giftIndex) && giftIndex >= 0 && giftIndex < products.length) {
-                    showGiftModal(products[giftIndex]);
-                }
+                // Funzione per aspettare che products sia popolato
+                const waitForProducts = () => {
+                    if (Array.isArray(products) && products.length > 0) {
+                        // Products è pronto, verifica l'indice e mostra il modal
+                        if (!isNaN(giftIndex) && giftIndex >= 0 && giftIndex < products.length) {
+                            showGiftModal(products[giftIndex]);
+                        }
+                    } else {
+                        // Products non è ancora pronto, riprova dopo 300ms
+                        setTimeout(waitForProducts, 300);
+                    }
+                };
+                
+                // Avvia il controllo
+                waitForProducts();
             }
         }
 
