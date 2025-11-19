@@ -233,6 +233,42 @@
             font-weight: bold;
         }
 
+        .share-gift {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #2d5016, #1a3a0f);
+            border: 3px solid #ffd700;
+            border-radius: 50%;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            z-index: 10000;
+        }
+
+        .share-gift.visible {
+            display: flex;
+        }
+
+        .share-gift:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .share-gift::before {
+            content: "⤴";
+            color: #ffd700;
+            font-size: 24px;
+            font-weight: bold;
+            transform: rotate(90deg);
+            display: inline-block;
+        }
+
         .footer {
             text-align: center;
             padding: 40px 20px 20px;
@@ -674,6 +710,8 @@
 
     <button class="back-to-top" id="backToTop" aria-label="Torna in cima alla pagina" data-track="button-back-to-top"></button>
 
+    <button class="share-gift" id="shareGift" aria-label="Condividi questo regalo" data-track="button-share-gift"></button>
+
     <audio id="blipSound" preload="auto" aria-hidden="true">
         <source src="blip.mp3" type="audio/mpeg">
     </audio>
@@ -777,6 +815,9 @@
             // Mostra il modal
             modal.style.display = 'flex';
             
+            // Mostra il pulsante di condivisione
+            document.getElementById('shareGift').classList.add('visible');
+            
             // Aggiungi tracking per apertura modal
             if (window.beampipe) {
                 window.beampipe('gift-modal-opened');
@@ -790,6 +831,9 @@
             
             // Riabilita lo scroll del body
             document.body.classList.remove('modal-open');
+            
+            // Nascondi il pulsante di condivisione
+            document.getElementById('shareGift').classList.remove('visible');
             
             playBlip();
             
@@ -1101,6 +1145,52 @@
         document.getElementById('giftModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeGiftModal();
+            }
+        });
+
+        // Event listener per il pulsante di condivisione
+        document.getElementById('shareGift').addEventListener('click', async function() {
+            // Track evento Beampipe
+            if (this.dataset.track && window.beampipe) {
+                window.beampipe(this.dataset.track);
+            }
+            
+            playBlip();
+            
+            // Ottieni l'URL completo con il parametro gift
+            const shareUrl = window.location.href;
+            const shareTitle = 'Guarda questa idea regalo!';
+            const shareText = '🎁 Ho trovato un regalo perfetto per te!';
+            
+            // Verifica se l'API Web Share è disponibile
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: shareTitle,
+                        text: shareText,
+                        url: shareUrl
+                    });
+                    
+                    // Track condivisione riuscita
+                    if (window.beampipe) {
+                        window.beampipe('gift-shared-success');
+                    }
+                } catch (error) {
+                    // L'utente ha annullato la condivisione o c'è stato un errore
+                    console.log('Condivisione annullata:', error);
+                }
+            } else {
+                // Fallback: copia il link negli appunti
+                try {
+                    await navigator.clipboard.writeText(shareUrl);
+                    alert('Link copiato negli appunti!');
+                    
+                    if (window.beampipe) {
+                        window.beampipe('gift-link-copied');
+                    }
+                } catch (error) {
+                    console.log('Errore nella copia del link:', error);
+                }
             }
         });
     </script>
