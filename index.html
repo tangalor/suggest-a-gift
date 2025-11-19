@@ -459,6 +459,122 @@
             display: block;
         }
 
+        /* Gift Modal Overlay */
+        .gift-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #2d5016 0%, #1a3a0f 100%);
+            z-index: 9999;
+            display: none;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .gift-modal-overlay::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(2px 2px at 20% 30%, #ffd700, transparent),
+                radial-gradient(2px 2px at 60% 70%, #ffed4e, transparent),
+                radial-gradient(1px 1px at 50% 50%, #ffd700, transparent),
+                radial-gradient(1px 1px at 80% 10%, #ffed4e, transparent),
+                radial-gradient(2px 2px at 90% 60%, #ffd700, transparent),
+                radial-gradient(1px 1px at 33% 80%, #ffed4e, transparent),
+                radial-gradient(2px 2px at 15% 90%, #ffd700, transparent),
+                radial-gradient(1px 1px at 75% 25%, #ffed4e, transparent),
+                radial-gradient(1px 1px at 40% 15%, #ffd700, transparent),
+                radial-gradient(2px 2px at 65% 85%, #ffed4e, transparent),
+                radial-gradient(1px 1px at 25% 55%, #ffd700, transparent),
+                radial-gradient(1px 1px at 85% 45%, #ffed4e, transparent),
+                radial-gradient(2px 2px at 45% 95%, #ffd700, transparent),
+                radial-gradient(1px 1px at 10% 20%, #ffed4e, transparent),
+                radial-gradient(1px 1px at 95% 75%, #ffd700, transparent);
+            background-size: 200% 200%;
+            background-position: 0% 0%;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        .gift-modal-overlay.show {
+            display: block;
+        }
+
+        .gift-modal-content {
+            position: relative;
+            z-index: 1;
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .gift-modal-close {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #ffd700;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #2d5016;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 2;
+        }
+
+        .gift-modal-close:hover {
+            background: #ffd700;
+            transform: rotate(90deg);
+        }
+
+        .gift-modal-header {
+            margin-bottom: 40px;
+        }
+
+        .gift-modal-logo {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 20px;
+        }
+
+        .gift-modal-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.4));
+        }
+
+        .gift-modal-title {
+            color: #ffd700;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .gift-modal-subtitle {
+            color: #e0e0e0;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        .gift-modal-product {
+            max-width: 350px;
+            margin: 0 auto;
+        }
+
         @media (max-width: 768px) {
             .h1-title::after {
                 content: "";
@@ -544,6 +660,25 @@
         <source src="blip.mp3" type="audio/mpeg">
     </audio>
 
+    <!-- Gift Modal Overlay -->
+    <div class="gift-modal-overlay" id="giftModal" style="display: none;">
+        <button class="gift-modal-close" id="giftModalClose" aria-label="Chiudi">
+            ✕
+        </button>
+        <div class="gift-modal-content">
+            <div class="gift-modal-header">
+                <div class="gift-modal-logo">
+                    <img src="gift.png" alt="Suggest a Gift">
+                </div>
+                <h2 class="gift-modal-title">🎁 Il tuo regalo perfetto</h2>
+                <p class="gift-modal-subtitle">Abbiamo preparato questo regalo speciale per te</p>
+            </div>
+            <div class="gift-modal-product" id="giftModalProduct">
+                <!-- Il prodotto verrà inserito qui dinamicamente -->
+            </div>
+        </div>
+    </div>
+
     <script>
         // Variabile per i prodotti caricati dal file JSON esterno
         let products = [];
@@ -559,6 +694,81 @@
             sound.play().catch(e => console.log('Audio play failed:', e));
         }
 
+        // Funzione per gestire il gift modal (query string ?gift=N)
+        function checkGiftParameter() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const giftParam = urlParams.get('gift');
+            
+            if (giftParam !== null) {
+                const giftIndex = parseInt(giftParam, 10);
+                
+                if (!isNaN(giftIndex) && giftIndex >= 0 && giftIndex < products.length) {
+                    showGiftModal(products[giftIndex]);
+                }
+            }
+        }
+
+        // Funzione per mostrare il gift modal con un prodotto specifico
+        function showGiftModal(product) {
+            const modal = document.getElementById('giftModal');
+            const modalProduct = document.getElementById('giftModalProduct');
+            
+            // Aggiungi tag affiliate al link del prodotto
+            const productLink = product.link.includes('?') 
+                ? `${product.link}&tag=suggestgift77-21`
+                : `${product.link}?tag=suggestgift77-21`;
+            
+            // Crea la card del prodotto nel modal
+            modalProduct.innerHTML = `
+                <div class="product-card" itemscope itemtype="https://schema.org/Product">
+                    <meta itemprop="url" content="${productLink}">
+                    <img src="${product.imageLink}" 
+                         alt="${product.title}" 
+                         class="product-image" 
+                         itemprop="image"
+                         loading="lazy">
+                    <h3 class="product-title" itemprop="name">${product.title}</h3>
+                    <div class="product-price" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+                        <span itemprop="price">${product.price}</span>
+                        <meta itemprop="priceCurrency" content="EUR">
+                    </div>
+                    <a href="${productLink}" 
+                       class="product-link" 
+                       target="_blank" 
+                       rel="noopener noreferrer" 
+                       data-track="product-gift-modal-${product.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 25)}"
+                       onclick="playBlip(); if (window.beampipe) { window.beampipe(this.getAttribute('data-track')); }">
+                        Vedi su Amazon →
+                    </a>
+                </div>
+            `;
+            
+            // Mostra il modal
+            modal.style.display = 'flex';
+            
+            // Aggiungi tracking per apertura modal
+            if (window.beampipe) {
+                window.beampipe('gift-modal-opened');
+            }
+        }
+
+        // Funzione per chiudere il gift modal
+        function closeGiftModal() {
+            const modal = document.getElementById('giftModal');
+            modal.style.display = 'none';
+            playBlip();
+            
+            // Aggiungi tracking per chiusura modal
+            if (window.beampipe) {
+                window.beampipe('gift-modal-closed');
+            }
+            
+            // Rimuovi il parametro gift dalla URL senza ricaricare la pagina
+            const url = new URL(window.location);
+            url.searchParams.delete('gift');
+            window.history.replaceState({}, '', url);
+        }
+
         // Carica i prodotti dal file JSON
         async function loadProducts() {
             try {
@@ -568,6 +778,8 @@
                 // Attiva la modalità random anche al caricamento iniziale
                 showRandomNine = true;
                 renderProducts();
+                // Controlla se c'è un parametro gift nella query string
+                checkGiftParameter();
             } catch (error) {
                 console.error('Errore nel caricamento dei prodotti:', error);
                 document.getElementById('noResults').textContent = 'Errore nel caricamento dei prodotti';
@@ -844,6 +1056,16 @@
                 backToTop.classList.add('visible');
             } else {
                 backToTop.classList.remove('visible');
+            }
+        });
+
+        // Event listener per il pulsante di chiusura del gift modal
+        document.getElementById('giftModalClose').addEventListener('click', closeGiftModal);
+
+        // Event listener per chiudere il modal cliccando sullo sfondo
+        document.getElementById('giftModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeGiftModal();
             }
         });
     </script>
