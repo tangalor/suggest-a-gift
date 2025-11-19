@@ -522,8 +522,8 @@
             position: fixed;
             top: 20px;
             right: 20px;
-            width: 50px;
-            height: 50px;
+            width: 25px;
+            height: 25px;
             background: rgba(255, 255, 255, 0.9);
             border: 2px solid #ffd700;
             border-radius: 50%;
@@ -531,7 +531,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 12px;
             color: #2d5016;
             font-weight: bold;
             transition: all 0.3s ease;
@@ -752,11 +752,11 @@
             
             // Crea la card del prodotto nel modal (senza link interno, cliccabile tutta la card)
             modalProduct.innerHTML = `
-                <div class="product-card" 
+                <div class="product-card show" 
                      itemscope 
                      itemtype="https://schema.org/Product"
                      onclick="window.open('${productLink}', '_blank', 'noopener,noreferrer'); playBlip(); if (window.beampipe) { window.beampipe('product-gift-modal-${product.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 25)}'); }"
-                     style="cursor: pointer;">
+                     style="cursor: pointer; display: block;">
                     <meta itemprop="url" content="${productLink}">
                     <img src="${product.imageLink}" 
                          alt="${product.title}" 
