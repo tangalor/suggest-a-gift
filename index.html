@@ -328,6 +328,103 @@
             content: "✕";
         }
 
+        /* Custom Confirmation Modal */
+        .confirm-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 20000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .confirm-modal-overlay.show {
+            display: flex;
+        }
+
+        .confirm-modal {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .confirm-modal-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .confirm-modal-title {
+            color: #2d5016;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .confirm-modal-message {
+            color: #666;
+            font-size: 1em;
+            line-height: 1.5;
+            margin-bottom: 25px;
+        }
+
+        .confirm-modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .confirm-modal-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .confirm-modal-btn-cancel {
+            background: #e0e0e0;
+            color: #666;
+        }
+
+        .confirm-modal-btn-cancel:hover {
+            background: #d0d0d0;
+        }
+
+        .confirm-modal-btn-confirm {
+            background: #d32f2f;
+            color: white;
+            border: 2px solid #ffd700;
+            box-shadow: 0 4px 15px rgba(211, 47, 47, 0.4);
+        }
+
+        .confirm-modal-btn-confirm:hover {
+            background: #b71c1c;
+            box-shadow: 0 6px 20px rgba(211, 47, 47, 0.6);
+        }
+
         .footer {
             text-align: center;
             padding: 40px 20px 20px;
@@ -804,6 +901,21 @@
         </div>
     </div>
 
+    <!-- Custom Confirmation Modal -->
+    <div class="confirm-modal-overlay" id="confirmModal">
+        <div class="confirm-modal">
+            <div class="confirm-modal-icon">🔔</div>
+            <h3 class="confirm-modal-title">Disabilitare le notifiche?</h3>
+            <p class="confirm-modal-message">
+                Vuoi disattivare le notifiche push? Non riceverai più aggiornamenti sulle nuove idee regalo.
+            </p>
+            <div class="confirm-modal-buttons">
+                <button class="confirm-modal-btn confirm-modal-btn-cancel" id="confirmCancel">Annulla</button>
+                <button class="confirm-modal-btn confirm-modal-btn-confirm" id="confirmOk">Disabilita</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Variabile per i prodotti caricati dal file JSON esterno
         let products = [];
@@ -837,6 +949,40 @@
             }
         }
 
+        // Funzione per mostrare la modale di conferma personalizzata
+        function showConfirmModal() {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('confirmModal');
+                const cancelBtn = document.getElementById('confirmCancel');
+                const okBtn = document.getElementById('confirmOk');
+                
+                modal.classList.add('show');
+                document.body.classList.add('modal-open');
+                
+                function cleanup() {
+                    modal.classList.remove('show');
+                    document.body.classList.remove('modal-open');
+                    cancelBtn.removeEventListener('click', onCancel);
+                    okBtn.removeEventListener('click', onOk);
+                }
+                
+                function onCancel() {
+                    playBlip();
+                    cleanup();
+                    resolve(false);
+                }
+                
+                function onOk() {
+                    playBlip();
+                    cleanup();
+                    resolve(true);
+                }
+                
+                cancelBtn.addEventListener('click', onCancel);
+                okBtn.addEventListener('click', onOk);
+            });
+        }
+
         // Funzione per richiedere il permesso notifiche
         async function requestNotificationPermission() {
             if (!('Notification' in window)) {
@@ -845,10 +991,29 @@
             }
 
             if (Notification.permission === 'granted') {
-                // L'utente ha già il permesso, chiedi conferma per disabilitare
-                const confirm = window.confirm('Vuoi disabilitare le notifiche push? Nota: dovrai riabilitarle manualmente dalle impostazioni del browser.');
-                if (confirm) {
-                    alert('Per disabilitare completamente le notifiche, vai nelle impostazioni del tuo browser e rimuovi il permesso per questo sito.');
+                // L'utente ha già il permesso, mostra modale di conferma per disabilitare
+                const confirmed = await showConfirmModal();
+                
+                if (confirmed) {
+                    // Disabilita tramite OneSignal
+                    if (window.OneSignalDeferred) {
+                        try {
+                            window.OneSignalDeferred.push(async function(OneSignal) {
+                                await OneSignal.User.PushSubscription.optOut();
+                            });
+                            
+                            // Track evento
+                            if (window.beampipe) {
+                                window.beampipe('notification-permission-disabled');
+                            }
+                            
+                            // Nota: non possiamo revocare il permesso del browser programmaticamente
+                            // L'utente deve farlo manualmente dalle impostazioni
+                            alert('✅ Notifiche disabilitate! Nota: per revocare completamente il permesso, puoi farlo dalle impostazioni del browser.');
+                        } catch (error) {
+                            console.error('Errore nella disabilitazione:', error);
+                        }
+                    }
                 }
                 return;
             }
@@ -954,6 +1119,9 @@
             // Mostra il pulsante di condivisione
             document.getElementById('shareGift').classList.add('visible');
             
+            // Nascondi la campanella notifiche
+            document.getElementById('notificationBell').style.display = 'none';
+            
             // Aggiungi tracking per apertura modal
             if (window.beampipe) {
                 window.beampipe('gift-modal-opened');
@@ -970,6 +1138,9 @@
             
             // Nascondi il pulsante di condivisione
             document.getElementById('shareGift').classList.remove('visible');
+            
+            // Mostra di nuovo la campanella notifiche
+            document.getElementById('notificationBell').style.display = 'block';
             
             playBlip();
             
