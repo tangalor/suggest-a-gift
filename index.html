@@ -1132,15 +1132,15 @@
                                 window.beampipe('notification-permission-disabled');
                             }
                             
-                            // Aggiorna il badge a rosso
-                            await updateNotificationBadge();
-                            
                             // Mostra alert personalizzato
                             await showAlertModal(
                                 'Notifiche disabilitate',
                                 'Le notifiche push sono state disabilitate con successo.',
                                 '✅'
                             );
+                            
+                            // Refresh della pagina per aggiornare l'icona e il badge
+                            window.location.reload();
                         } catch (error) {
                             console.error('Errore nella disabilitazione:', error);
                         }
@@ -1191,15 +1191,15 @@
                         });
                     }
                     
-                    // Aggiorna il badge a verde
-                    await updateNotificationBadge();
-                    
                     // Mostra alert personalizzato
                     await showAlertModal(
                         'Notifiche abilitate',
                         'Le notifiche push sono state abilitate con successo!',
                         '✅'
                     );
+                    
+                    // Refresh della pagina per aggiornare l'icona e il badge
+                    window.location.reload();
                 } else {
                     // Track evento
                     if (window.beampipe) {
