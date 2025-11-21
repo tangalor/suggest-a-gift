@@ -425,6 +425,31 @@
             box-shadow: 0 6px 20px rgba(211, 47, 47, 0.6);
         }
 
+        /* Alert Modal (single button) */
+        .alert-modal-buttons {
+            display: flex;
+            justify-content: center;
+        }
+
+        .alert-modal-btn {
+            padding: 12px 35px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            background: #2d5016;
+            color: #ffd700;
+            border: 2px solid #ffd700;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(45, 80, 22, 0.4);
+        }
+
+        .alert-modal-btn:hover {
+            background: #1a3a0f;
+            box-shadow: 0 6px 20px rgba(45, 80, 22, 0.6);
+        }
+
         .footer {
             text-align: center;
             padding: 40px 20px 20px;
@@ -916,6 +941,20 @@
         </div>
     </div>
 
+    <!-- Alert Modal -->
+    <div class="confirm-modal-overlay" id="alertModal">
+        <div class="confirm-modal">
+            <div class="confirm-modal-icon" id="alertIcon">✅</div>
+            <h3 class="confirm-modal-title" id="alertTitle">Notifiche disabilitate</h3>
+            <p class="confirm-modal-message" id="alertMessage">
+                Le notifiche push sono state disabilitate. Per revocare completamente il permesso, puoi farlo dalle impostazioni del browser.
+            </p>
+            <div class="alert-modal-buttons">
+                <button class="alert-modal-btn" id="alertOk">OK</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Variabile per i prodotti caricati dal file JSON esterno
         let products = [];
@@ -947,6 +986,38 @@
                 badge.classList.remove('enabled');
                 badge.classList.add('disabled');
             }
+        }
+
+        // Funzione per mostrare la modale di alert personalizzata
+        function showAlertModal(title, message, icon = '✅') {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('alertModal');
+                const okBtn = document.getElementById('alertOk');
+                const titleEl = document.getElementById('alertTitle');
+                const messageEl = document.getElementById('alertMessage');
+                const iconEl = document.getElementById('alertIcon');
+                
+                titleEl.textContent = title;
+                messageEl.textContent = message;
+                iconEl.textContent = icon;
+                
+                modal.classList.add('show');
+                document.body.classList.add('modal-open');
+                
+                function cleanup() {
+                    modal.classList.remove('show');
+                    document.body.classList.remove('modal-open');
+                    okBtn.removeEventListener('click', onOk);
+                }
+                
+                function onOk() {
+                    playBlip();
+                    cleanup();
+                    resolve();
+                }
+                
+                okBtn.addEventListener('click', onOk);
+            });
         }
 
         // Funzione per mostrare la modale di conferma personalizzata
@@ -1007,9 +1078,15 @@
                                 window.beampipe('notification-permission-disabled');
                             }
                             
-                            // Nota: non possiamo revocare il permesso del browser programmaticamente
-                            // L'utente deve farlo manualmente dalle impostazioni
-                            alert('✅ Notifiche disabilitate! Nota: per revocare completamente il permesso, puoi farlo dalle impostazioni del browser.');
+                            // Aggiorna il badge a rosso
+                            updateNotificationBadge();
+                            
+                            // Mostra alert personalizzato
+                            await showAlertModal(
+                                'Notifiche disabilitate',
+                                'Le notifiche push sono state disabilitate. Per revocare completamente il permesso, puoi farlo dalle impostazioni del browser.',
+                                '✅'
+                            );
                         } catch (error) {
                             console.error('Errore nella disabilitazione:', error);
                         }
@@ -1019,7 +1096,11 @@
             }
 
             if (Notification.permission === 'denied') {
-                alert('Hai negato il permesso per le notifiche. Per abilitarle, vai nelle impostazioni del tuo browser e consenti le notifiche per questo sito.');
+                await showAlertModal(
+                    'Permesso negato',
+                    'Hai negato il permesso per le notifiche. Per abilitarle, vai nelle impostazioni del tuo browser e consenti le notifiche per questo sito.',
+                    '⚠️'
+                );
                 return;
             }
 
