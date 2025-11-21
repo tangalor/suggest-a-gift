@@ -272,6 +272,62 @@
             display: inline-block;
         }
 
+        .notification-bell {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            z-index: 10000;
+            transition: transform 0.3s ease;
+        }
+
+        .notification-bell:hover {
+            transform: scale(1.1);
+        }
+
+        .notification-bell img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+
+        .notification-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .notification-badge.enabled {
+            background: #4caf50;
+            color: white;
+        }
+
+        .notification-badge.enabled::before {
+            content: "✓";
+        }
+
+        .notification-badge.disabled {
+            background: #f44336;
+            color: white;
+        }
+
+        .notification-badge.disabled::before {
+            content: "✕";
+        }
+
         .footer {
             text-align: center;
             padding: 40px 20px 20px;
@@ -717,6 +773,12 @@
         Condividi
     </button>
 
+    <!-- Notification Bell -->
+    <div class="notification-bell" id="notificationBell" title="Gestisci notifiche">
+        <img src="bell2.png" alt="Notifiche">
+        <div class="notification-badge disabled" id="notificationBadge"></div>
+    </div>
+
     <audio id="blipSound" preload="auto" aria-hidden="true">
         <source src="blip.mp3" type="audio/mpeg">
     </audio>
@@ -755,6 +817,75 @@
             const sound = document.getElementById('blipSound');
             sound.currentTime = 0;
             sound.play().catch(e => console.log('Audio play failed:', e));
+        }
+
+        // Funzione per aggiornare lo stato del badge notifiche
+        function updateNotificationBadge() {
+            const badge = document.getElementById('notificationBadge');
+            
+            if ('Notification' in window) {
+                if (Notification.permission === 'granted') {
+                    badge.classList.remove('disabled');
+                    badge.classList.add('enabled');
+                } else {
+                    badge.classList.remove('enabled');
+                    badge.classList.add('disabled');
+                }
+            } else {
+                badge.classList.remove('enabled');
+                badge.classList.add('disabled');
+            }
+        }
+
+        // Funzione per richiedere il permesso notifiche
+        async function requestNotificationPermission() {
+            if (!('Notification' in window)) {
+                alert('Il tuo browser non supporta le notifiche push.');
+                return;
+            }
+
+            if (Notification.permission === 'granted') {
+                // L'utente ha già il permesso, chiedi conferma per disabilitare
+                const confirm = window.confirm('Vuoi disabilitare le notifiche push? Nota: dovrai riabilitarle manualmente dalle impostazioni del browser.');
+                if (confirm) {
+                    alert('Per disabilitare completamente le notifiche, vai nelle impostazioni del tuo browser e rimuovi il permesso per questo sito.');
+                }
+                return;
+            }
+
+            if (Notification.permission === 'denied') {
+                alert('Hai negato il permesso per le notifiche. Per abilitarle, vai nelle impostazioni del tuo browser e consenti le notifiche per questo sito.');
+                return;
+            }
+
+            // Richiedi il permesso
+            try {
+                const permission = await Notification.requestPermission();
+                updateNotificationBadge();
+                
+                if (permission === 'granted') {
+                    playBlip();
+                    
+                    // Track evento
+                    if (window.beampipe) {
+                        window.beampipe('notification-permission-granted');
+                    }
+
+                    // Registra con OneSignal
+                    if (window.OneSignalDeferred) {
+                        window.OneSignalDeferred.push(async function(OneSignal) {
+                            await OneSignal.User.PushSubscription.optIn();
+                        });
+                    }
+                } else {
+                    // Track evento
+                    if (window.beampipe) {
+                        window.beampipe('notification-permission-denied');
+                    }
+                }
+            } catch (error) {
+                console.error('Errore nella richiesta permesso notifiche:', error);
+            }
         }
 
         // Funzione per gestire il gift modal (query string ?gift=N)
@@ -864,6 +995,8 @@
                 renderProducts();
                 // Controlla se c'è un parametro gift nella query string
                 checkGiftParameter();
+                // Aggiorna lo stato della campanella notifiche
+                updateNotificationBadge();
             } catch (error) {
                 console.error('Errore nel caricamento dei prodotti:', error);
                 document.getElementById('noResults').textContent = 'Errore nel caricamento dei prodotti';
@@ -1198,6 +1331,23 @@
                 }
             }
         });
+
+        // Event listener per la campanella notifiche
+        document.getElementById('notificationBell').addEventListener('click', function() {
+            playBlip();
+            requestNotificationPermission();
+        });
+
+        // Monitora i cambiamenti di permesso (se supportato dal browser)
+        if ('permissions' in navigator) {
+            navigator.permissions.query({name: 'notifications'}).then(function(permissionStatus) {
+                permissionStatus.onchange = function() {
+                    updateNotificationBadge();
+                };
+            }).catch(function(error) {
+                console.log('Permissions API non supportata:', error);
+            });
+        }
     </script>
 </body>
 </html>
