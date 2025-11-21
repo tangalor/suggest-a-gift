@@ -929,9 +929,9 @@
     <!-- Custom Confirmation Modal -->
     <div class="confirm-modal-overlay" id="confirmModal">
         <div class="confirm-modal">
-            <div class="confirm-modal-icon">🔔</div>
-            <h3 class="confirm-modal-title">Disabilitare le notifiche?</h3>
-            <p class="confirm-modal-message">
+            <div class="confirm-modal-icon" id="confirmIcon">🔔</div>
+            <h3 class="confirm-modal-title" id="confirmTitle">Disabilitare le notifiche?</h3>
+            <p class="confirm-modal-message" id="confirmMessage">
                 Vuoi disattivare le notifiche push? Non riceverai più aggiornamenti sulle nuove idee regalo.
             </p>
             <div class="confirm-modal-buttons">
@@ -970,15 +970,35 @@
             sound.play().catch(e => console.log('Audio play failed:', e));
         }
 
-        // Funzione per aggiornare lo stato del badge notifiche
-        function updateNotificationBadge() {
+        // Funzione per aggiornare lo stato del badge notifiche basato su OneSignal
+        async function updateNotificationBadge() {
             const badge = document.getElementById('notificationBadge');
             
-            if ('Notification' in window) {
-                if (Notification.permission === 'granted') {
-                    badge.classList.remove('disabled');
-                    badge.classList.add('enabled');
-                } else {
+            if (!('Notification' in window)) {
+                badge.classList.remove('enabled');
+                badge.classList.add('disabled');
+                return;
+            }
+
+            // Verifica lo stato di OneSignal
+            if (window.OneSignalDeferred) {
+                try {
+                    const optedIn = await new Promise((resolve) => {
+                        window.OneSignalDeferred.push(async function(OneSignal) {
+                            const isPushEnabled = await OneSignal.User.PushSubscription.optedIn;
+                            resolve(isPushEnabled);
+                        });
+                    });
+                    
+                    if (optedIn) {
+                        badge.classList.remove('disabled');
+                        badge.classList.add('enabled');
+                    } else {
+                        badge.classList.remove('enabled');
+                        badge.classList.add('disabled');
+                    }
+                } catch (error) {
+                    console.error('Errore nel controllo stato OneSignal:', error);
                     badge.classList.remove('enabled');
                     badge.classList.add('disabled');
                 }
@@ -1021,11 +1041,20 @@
         }
 
         // Funzione per mostrare la modale di conferma personalizzata
-        function showConfirmModal() {
+        function showConfirmModal(title, message, icon, confirmText = 'Conferma', cancelText = 'Annulla') {
             return new Promise((resolve) => {
                 const modal = document.getElementById('confirmModal');
                 const cancelBtn = document.getElementById('confirmCancel');
                 const okBtn = document.getElementById('confirmOk');
+                const titleEl = document.getElementById('confirmTitle');
+                const messageEl = document.getElementById('confirmMessage');
+                const iconEl = document.getElementById('confirmIcon');
+                
+                titleEl.textContent = title;
+                messageEl.textContent = message;
+                iconEl.textContent = icon;
+                okBtn.textContent = confirmText;
+                cancelBtn.textContent = cancelText;
                 
                 modal.classList.add('show');
                 document.body.classList.add('modal-open');
@@ -1057,13 +1086,38 @@
         // Funzione per richiedere il permesso notifiche
         async function requestNotificationPermission() {
             if (!('Notification' in window)) {
-                alert('Il tuo browser non supporta le notifiche push.');
+                await showAlertModal(
+                    'Browser non supportato',
+                    'Il tuo browser non supporta le notifiche push.',
+                    '⚠️'
+                );
                 return;
             }
 
-            if (Notification.permission === 'granted') {
-                // L'utente ha già il permesso, mostra modale di conferma per disabilitare
-                const confirmed = await showConfirmModal();
+            // Controlla lo stato OneSignal
+            let isOptedIn = false;
+            if (window.OneSignalDeferred) {
+                try {
+                    isOptedIn = await new Promise((resolve) => {
+                        window.OneSignalDeferred.push(async function(OneSignal) {
+                            const isPushEnabled = await OneSignal.User.PushSubscription.optedIn;
+                            resolve(isPushEnabled);
+                        });
+                    });
+                } catch (error) {
+                    console.error('Errore nel controllo stato OneSignal:', error);
+                }
+            }
+
+            if (isOptedIn) {
+                // L'utente ha già le notifiche attive, chiedi conferma per disabilitare
+                const confirmed = await showConfirmModal(
+                    'Disabilitare le notifiche?',
+                    'Vuoi disattivare le notifiche push? Non riceverai più aggiornamenti sulle nuove idee regalo.',
+                    '🔔',
+                    'Disabilita',
+                    'Annulla'
+                );
                 
                 if (confirmed) {
                     // Disabilita tramite OneSignal
@@ -1079,12 +1133,12 @@
                             }
                             
                             // Aggiorna il badge a rosso
-                            updateNotificationBadge();
+                            await updateNotificationBadge();
                             
                             // Mostra alert personalizzato
                             await showAlertModal(
                                 'Notifiche disabilitate',
-                                'Le notifiche push sono state disabilitate. Per revocare completamente il permesso, puoi farlo dalle impostazioni del browser.',
+                                'Le notifiche push sono state disabilitate con successo.',
                                 '✅'
                             );
                         } catch (error) {
@@ -1093,8 +1147,22 @@
                     }
                 }
                 return;
+            } else {
+                // Le notifiche sono disabilitate, chiedi conferma per abilitare
+                const confirmed = await showConfirmModal(
+                    'Abilitare le notifiche?',
+                    'Vuoi attivare le notifiche push? Riceverai aggiornamenti sulle nuove idee regalo.',
+                    '🔔',
+                    'Abilita',
+                    'Annulla'
+                );
+                
+                if (!confirmed) {
+                    return;
+                }
             }
 
+            // Verifica il permesso browser
             if (Notification.permission === 'denied') {
                 await showAlertModal(
                     'Permesso negato',
@@ -1107,7 +1175,6 @@
             // Richiedi il permesso
             try {
                 const permission = await Notification.requestPermission();
-                updateNotificationBadge();
                 
                 if (permission === 'granted') {
                     playBlip();
@@ -1123,11 +1190,23 @@
                             await OneSignal.User.PushSubscription.optIn();
                         });
                     }
+                    
+                    // Aggiorna il badge a verde
+                    await updateNotificationBadge();
+                    
+                    // Mostra alert personalizzato
+                    await showAlertModal(
+                        'Notifiche abilitate',
+                        'Le notifiche push sono state abilitate con successo!',
+                        '✅'
+                    );
                 } else {
                     // Track evento
                     if (window.beampipe) {
                         window.beampipe('notification-permission-denied');
                     }
+                    
+                    await updateNotificationBadge();
                 }
             } catch (error) {
                 console.error('Errore nella richiesta permesso notifiche:', error);
