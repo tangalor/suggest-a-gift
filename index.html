@@ -55,6 +55,18 @@
         await OneSignal.init({
         appId: "229d900b-4a70-4ab2-8c32-54272291e036",
         });
+        
+        // Monitora i cambiamenti dello stato di sottoscrizione
+        OneSignal.User.PushSubscription.addEventListener('change', function(event) {
+            console.log('OneSignal subscription changed:', event);
+            
+            // Se l'utente si è appena iscritto (optedIn è true e prima non lo era)
+            if (event.current.optedIn && !event.previous.optedIn) {
+                console.log('User just opted in to push notifications, reloading page...');
+                // Reload della pagina per aggiornare il badge
+                window.location.reload();
+            }
+        });
     });
     </script>
     
