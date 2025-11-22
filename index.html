@@ -628,6 +628,7 @@
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             cursor: pointer;
             display: none;
+            position: relative;
         }
 
         .product-card.show {
@@ -637,6 +638,46 @@
         .product-card:hover {
             transform: translateY(-10px);
             box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+        }
+
+        .product-share-btn {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            width: 36px;
+            height: 36px;
+            background: #d32f2f;
+            border: 2px solid #ffd700;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(211, 47, 47, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .product-share-btn:hover {
+            background: #b71c1c;
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(211, 47, 47, 0.6);
+        }
+
+        .product-share-btn::before {
+            content: "⤴";
+            color: #ffd700;
+            font-size: 16px;
+            font-weight: bold;
+            transform: rotate(90deg);
+            display: block;
+        }
+
+        /* Mostra il pulsante condividi solo su mobile/tablet */
+        @media (max-width: 1024px) {
+            .product-share-btn {
+                display: flex;
+            }
         }
 
         .product-image {
@@ -1503,6 +1544,11 @@
                         .replace(/-+$/, '');
                     card.setAttribute('data-track', trackValue);
                     
+                    // Aggiungi tag affiliate al link del prodotto
+                    const productUrl = product.link.includes('?') 
+                        ? `${product.link}&tag=suggestgift77-21`
+                        : `${product.link}?tag=suggestgift77-21`;
+                    
                     card.innerHTML = `
                         <div class="product-image">
                             <img src="${product.imageLink}" alt="${product.title}" itemprop="image" loading="lazy">
@@ -1512,8 +1558,16 @@
                             <meta itemprop="priceCurrency" content="EUR">
                             <span itemprop="price">${product.price}</span>
                         </div>
+                        <button class="product-share-btn" data-product-url="${productUrl}" data-product-title="${product.title.replace(/"/g, '&quot;')}" aria-label="Condividi questo prodotto"></button>
                     `;
-                    card.onclick = () => {
+                    
+                    // Event listener per il click sulla card (apre il prodotto)
+                    card.onclick = (e) => {
+                        // Se il click è sul pulsante condividi, non aprire il prodotto
+                        if (e.target.classList.contains('product-share-btn')) {
+                            return;
+                        }
+                        
                         // Track evento Beampipe
                         if (card.dataset.track && window.beampipe) {
                             window.beampipe(card.dataset.track);
@@ -1523,14 +1577,57 @@
                         playBlip();
                         
                         if (product.link !== '#') {
-                            // Aggiungi il tag affiliato all'URL
-                            let productUrl = product.link;
-                            const separator = productUrl.includes('?') ? '&' : '?';
-                            productUrl += separator + 'tag=suggestgift77-21';
-                            
                             window.open(productUrl, '_blank');
                         }
                     };
+                    
+                    // Event listener per il pulsante condividi
+                    const shareBtn = card.querySelector('.product-share-btn');
+                    shareBtn.onclick = async (e) => {
+                        e.stopPropagation(); // Previeni il click sulla card
+                        
+                        playBlip();
+                        
+                        const shareUrl = shareBtn.dataset.productUrl;
+                        const shareTitle = shareBtn.dataset.productTitle;
+                        
+                        // Track evento
+                        if (window.beampipe) {
+                            window.beampipe('product-share-mobile-' + trackValue);
+                        }
+                        
+                        // Usa la Web Share API (disponibile su mobile)
+                        if (navigator.share) {
+                            try {
+                                await navigator.share({
+                                    title: shareTitle,
+                                    text: `Guarda questo regalo: ${shareTitle}`,
+                                    url: shareUrl
+                                });
+                                
+                                // Track condivisione riuscita
+                                if (window.beampipe) {
+                                    window.beampipe('product-share-success');
+                                }
+                            } catch (error) {
+                                // L'utente ha annullato la condivisione
+                                console.log('Condivisione annullata:', error);
+                            }
+                        } else {
+                            // Fallback: copia il link negli appunti
+                            try {
+                                await navigator.clipboard.writeText(shareUrl);
+                                alert('Link copiato negli appunti!');
+                                
+                                if (window.beampipe) {
+                                    window.beampipe('product-link-copied');
+                                }
+                            } catch (error) {
+                                console.log('Errore nella copia del link:', error);
+                            }
+                        }
+                    };
+                    
                     grid.appendChild(card);
                 });
             }
