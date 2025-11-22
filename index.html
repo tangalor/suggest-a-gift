@@ -894,6 +894,11 @@
             <div class="no-results" id="noResults" role="alert">Nessun prodotto trovato con i filtri selezionati</div>
         </section>
 
+        <!-- Second CTA Button -->
+        <div style="text-align: center; margin: 40px 0;">
+            <button class="main-cta" id="mainCtaBottom" data-track="button-dammi-altre-idee-regalo">Dammi altre idee regalo →</button>
+        </div>
+
         <p class="disclaimer">Alcune informazioni sui prodotti (come il prezzo) potrebbero non essere sempre esatti a causa di variazioni da parte del venditore, ma restano comunque indicativi.</p>
 
         <footer class="footer" role="contentinfo">
@@ -1566,6 +1571,32 @@
 
         // Gestione bottone CTA principale
         document.getElementById('mainCta').addEventListener('click', function() {
+            // Track evento Beampipe
+            if (this.dataset.track && window.beampipe) {
+                window.beampipe(this.dataset.track);
+            }
+            
+            // Riproduci il suono
+            playBlip();
+            
+            // Attiva la modalità random di 9 prodotti
+            showRandomNine = true;
+            
+            // Cambia il messaggio hint
+            document.getElementById('ctaHint').textContent = 'Clicca ancora sul pulsante per ottenere altre simpatiche idee regalo, fatti ispirare quante volte vuoi.';
+            
+            // Renderizza con 9 prodotti random
+            renderProducts();
+            
+            // Scroll alla griglia prodotti
+            document.getElementById('productsGrid').scrollIntoView({ 
+                behavior: 'smooth',
+                block: 'start'
+            });
+        });
+
+        // Gestione bottone CTA secondario (in basso)
+        document.getElementById('mainCtaBottom').addEventListener('click', function() {
             // Track evento Beampipe
             if (this.dataset.track && window.beampipe) {
                 window.beampipe(this.dataset.track);
