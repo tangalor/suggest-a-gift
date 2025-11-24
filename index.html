@@ -488,6 +488,36 @@
             box-shadow: 0 6px 20px rgba(45, 80, 22, 0.6);
         }
 
+        /* Input Modal (with text field) */
+        .input-modal-field {
+            width: 100%;
+            padding: 12px 15px;
+            margin: 20px 0;
+            border: 2px solid #ffd700;
+            border-radius: 10px;
+            font-size: 1em;
+            color: #2d5016;
+            background: white;
+            box-sizing: border-box;
+        }
+
+        .input-modal-field:focus {
+            outline: none;
+            border-color: #ffed4e;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+
+        .input-modal-btn-confirm:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .input-modal-btn-confirm:disabled:hover {
+            background: #ccc;
+            box-shadow: none;
+        }
+
         .footer {
             text-align: center;
             padding: 40px 20px 20px;
@@ -1051,6 +1081,26 @@
         </div>
     </div>
 
+    <!-- Input Modal (Gift Search) -->
+    <div class="confirm-modal-overlay" id="inputModal">
+        <div class="confirm-modal">
+            <div class="confirm-modal-icon">🎁</div>
+            <h3 class="confirm-modal-title">Che regalo stai cercando?</h3>
+            <p class="confirm-modal-message">
+                Dimmelo e ti proporrò alcune idee regalo a tema con la tua richiesta.
+            </p>
+            <input type="text" 
+                   id="giftSearchInput" 
+                   class="input-modal-field" 
+                   placeholder="Es: Regalo per mamma, giochi bambini, tech gadget..." 
+                   maxlength="100">
+            <div class="confirm-modal-buttons">
+                <button class="confirm-modal-btn confirm-modal-btn-cancel" id="inputCancel">Annulla</button>
+                <button class="confirm-modal-btn confirm-modal-btn-confirm input-modal-btn-confirm" id="inputConfirm" disabled>Cercalo per me</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Variabile per i prodotti caricati dal file JSON esterno
         let products = [];
@@ -1064,6 +1114,164 @@
             const sound = document.getElementById('blipSound');
             sound.currentTime = 0;
             sound.play().catch(e => console.log('Audio play failed:', e));
+        }
+
+        // Funzione per verificare se l'utente ha già impostato un tag OneSignal
+        async function hasUserGiftTag() {
+            if (!window.OneSignalDeferred) {
+                return false;
+            }
+
+            try {
+                const hasTag = await new Promise((resolve) => {
+                    window.OneSignalDeferred.push(async function(OneSignal) {
+                        try {
+                            const tags = await OneSignal.User.getTags();
+                            resolve(tags && tags['gift_search'] !== undefined);
+                        } catch (error) {
+                            console.error('Errore nel recupero dei tag:', error);
+                            resolve(false);
+                        }
+                    });
+                });
+                
+                return hasTag;
+            } catch (error) {
+                console.error('Errore nel controllo tag:', error);
+                return false;
+            }
+        }
+
+        // Funzione per impostare il tag OneSignal
+        async function setUserGiftTag(giftSearch) {
+            if (!window.OneSignalDeferred) {
+                return false;
+            }
+
+            try {
+                const success = await new Promise((resolve) => {
+                    window.OneSignalDeferred.push(async function(OneSignal) {
+                        try {
+                            await OneSignal.User.addTag('gift_search', giftSearch);
+                            console.log('Tag gift_search impostato:', giftSearch);
+                            resolve(true);
+                        } catch (error) {
+                            console.error('Errore nell\'impostazione del tag:', error);
+                            resolve(false);
+                        }
+                    });
+                });
+                
+                return success;
+            } catch (error) {
+                console.error('Errore nel set tag:', error);
+                return false;
+            }
+        }
+
+        // Funzione per mostrare la modale di input regalo
+        function showInputModal() {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('inputModal');
+                const inputField = document.getElementById('giftSearchInput');
+                const cancelBtn = document.getElementById('inputCancel');
+                const confirmBtn = document.getElementById('inputConfirm');
+                
+                // Reset campo e stato bottone
+                inputField.value = '';
+                confirmBtn.disabled = true;
+                
+                modal.classList.add('show');
+                document.body.classList.add('modal-open');
+                
+                // Focus sul campo di input
+                setTimeout(() => inputField.focus(), 100);
+                
+                // Event listener per abilitare/disabilitare il bottone conferma
+                function checkInput() {
+                    const value = inputField.value.trim();
+                    confirmBtn.disabled = value.length < 3;
+                }
+                
+                inputField.addEventListener('input', checkInput);
+                inputField.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter' && inputField.value.trim().length >= 3) {
+                        onConfirm();
+                    }
+                });
+                
+                function cleanup() {
+                    modal.classList.remove('show');
+                    document.body.classList.remove('modal-open');
+                    inputField.removeEventListener('input', checkInput);
+                    cancelBtn.removeEventListener('click', onCancel);
+                    confirmBtn.removeEventListener('click', onConfirm);
+                }
+                
+                function onCancel() {
+                    cleanup();
+                    resolve(null);
+                }
+                
+                function onConfirm() {
+                    const value = inputField.value.trim();
+                    if (value.length >= 3) {
+                        playBlip();
+                        cleanup();
+                        resolve(value);
+                    }
+                }
+                
+                cancelBtn.addEventListener('click', onCancel);
+                confirmBtn.addEventListener('click', onConfirm);
+            });
+        }
+
+        // Funzione per controllare e mostrare la modale di input se necessario
+        async function checkAndShowInputModal() {
+            // Verifica se l'utente è iscritto alle notifiche
+            const isOptedIn = await new Promise((resolve) => {
+                if (!window.OneSignalDeferred) {
+                    resolve(false);
+                    return;
+                }
+                
+                window.OneSignalDeferred.push(async function(OneSignal) {
+                    try {
+                        const optedIn = await OneSignal.User.PushSubscription.optedIn;
+                        resolve(optedIn);
+                    } catch (error) {
+                        console.error('Errore nel controllo iscrizione:', error);
+                        resolve(false);
+                    }
+                });
+            });
+
+            // Se non è iscritto, non mostrare la modale
+            if (!isOptedIn) {
+                return;
+            }
+
+            // Verifica se ha già un tag
+            const hasTag = await hasUserGiftTag();
+            
+            // Se ha già un tag, non mostrare la modale
+            if (hasTag) {
+                return;
+            }
+
+            // Mostra la modale e attendi la risposta
+            const giftSearch = await showInputModal();
+            
+            // Se l'utente ha inserito qualcosa, salva il tag
+            if (giftSearch) {
+                await setUserGiftTag(giftSearch);
+                
+                // Track evento
+                if (window.beampipe) {
+                    window.beampipe('gift-search-tag-set');
+                }
+            }
         }
 
         // Funzione per ottenere il subscription ID di OneSignal
@@ -1291,8 +1499,8 @@
             if (isOptedIn) {
                 // L'utente ha già le notifiche attive, chiedi conferma per disabilitare
                 const confirmed = await showConfirmModal(
-                    'Disabilitare le notifiche?',
-                    'Vuoi disattivare le notifiche push? Non riceverai più aggiornamenti sulle nuove idee regalo.',
+                    'Hai già trovato il regalo per te?',
+                    'Se non vuoi più ricevere nuove idee regalo, disabilita le notifiche push e non riceverai più aggiornamenti.',
                     '🔔',
                     'Disabilita',
                     'Annulla'
@@ -1507,6 +1715,8 @@
                 checkGiftParameter();
                 // Aggiorna lo stato della campanella notifiche
                 updateNotificationBadge();
+                // Controlla e mostra la modale di input se necessario (solo al primo caricamento dopo iscrizione)
+                checkAndShowInputModal();
             } catch (error) {
                 console.error('Errore nel caricamento dei prodotti:', error);
                 document.getElementById('noResults').textContent = 'Errore nel caricamento dei prodotti';
@@ -1788,7 +1998,7 @@
         });
 
         // Gestione bottone CTA principale
-        document.getElementById('mainCta').addEventListener('click', function() {
+        document.getElementById('mainCta').addEventListener('click', async function() {
             // Track evento Beampipe
             if (this.dataset.track && window.beampipe) {
                 window.beampipe(this.dataset.track);
@@ -1796,6 +2006,9 @@
             
             // Riproduci il suono
             playBlip();
+            
+            // Controlla e mostra la modale di input se necessario
+            await checkAndShowInputModal();
             
             // Attiva la modalità random di 9 prodotti
             showRandomNine = true;
@@ -1814,7 +2027,7 @@
         });
 
         // Gestione bottone CTA secondario (in basso)
-        document.getElementById('mainCtaBottom').addEventListener('click', function() {
+        document.getElementById('mainCtaBottom').addEventListener('click', async function() {
             // Track evento Beampipe
             if (this.dataset.track && window.beampipe) {
                 window.beampipe(this.dataset.track);
@@ -1822,6 +2035,9 @@
             
             // Riproduci il suono
             playBlip();
+            
+            // Controlla e mostra la modale di input se necessario
+            await checkAndShowInputModal();
             
             // Attiva la modalità random di 9 prodotti
             showRandomNine = true;
