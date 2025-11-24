@@ -300,13 +300,13 @@
         }
 
         .notification-bell.attention {
-            animation: bellShake 0.5s ease-in-out, bellGlow 0.5s ease-in-out;
+            animation: bellShake 0.5s ease-in-out, bellGlow 0.5s ease-in-out, bellZoom 0.5s ease-in-out;
         }
 
         @keyframes bellShake {
-            0%, 100% { transform: rotate(0deg); }
-            10%, 30%, 50%, 70%, 90% { transform: rotate(-10deg); }
-            20%, 40%, 60%, 80% { transform: rotate(10deg); }
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            10%, 30%, 50%, 70%, 90% { transform: rotate(-10deg) scale(1.3); }
+            20%, 40%, 60%, 80% { transform: rotate(10deg) scale(1.3); }
         }
 
         @keyframes bellGlow {
@@ -316,6 +316,13 @@
             50% { 
                 filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.9)) drop-shadow(0 0 30px rgba(255, 215, 0, 0.7));
             }
+        }
+
+        @keyframes bellZoom {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.3) rotate(-10deg); }
+            50% { transform: scale(1.3) rotate(0deg); }
+            75% { transform: scale(1.3) rotate(10deg); }
         }
 
         .notification-bell img {
@@ -991,7 +998,7 @@
     </audio>
 
     <audio id="heySeeMeSound" preload="auto" aria-hidden="true">
-        <source src="hei-see-me.mp3" type="audio/mpeg">
+        <source src="hei_see_me.mp3" type="audio/mpeg">
     </audio>
 
     <!-- Gift Modal Overlay -->
