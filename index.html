@@ -1026,9 +1026,9 @@
     <div class="confirm-modal-overlay" id="confirmModal">
         <div class="confirm-modal">
             <div class="confirm-modal-icon" id="confirmIcon">🔔</div>
-            <h3 class="confirm-modal-title" id="confirmTitle">Disabilitare le notifiche?</h3>
+            <h3 class="confirm-modal-title" id="confirmTitle">Hai già trovato il regalo per te?</h3>
             <p class="confirm-modal-message" id="confirmMessage">
-                Vuoi disattivare le notifiche push? Non riceverai più aggiornamenti sulle nuove idee regalo.
+                Se nuon vuoi più ricevere nuove idee regalo, disabilita le notifiche push e non riceverai più aggiornamenti.
             </p>
             <div class="confirm-modal-buttons">
                 <button class="confirm-modal-btn confirm-modal-btn-cancel" id="confirmCancel">Annulla</button>
@@ -1330,8 +1330,8 @@
             } else {
                 // Le notifiche sono disabilitate, chiedi conferma per abilitare
                 const confirmed = await showConfirmModal(
-                    'Abilitare le notifiche?',
-                    'Vuoi attivare le notifiche push? Riceverai aggiornamenti sulle nuove idee regalo.',
+                    'Nuove idee regalo',
+                    'Vuoi ricevere nuove idee regalo? Attiva le notifiche push e riceverai aggiornamenti sulle nuove idee regalo.',
                     '🔔',
                     'Abilita',
                     'Annulla'
