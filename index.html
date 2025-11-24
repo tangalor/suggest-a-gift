@@ -299,6 +299,25 @@
             transform: scale(1.1);
         }
 
+        .notification-bell.attention {
+            animation: bellShake 0.5s ease-in-out, bellGlow 0.5s ease-in-out;
+        }
+
+        @keyframes bellShake {
+            0%, 100% { transform: rotate(0deg); }
+            10%, 30%, 50%, 70%, 90% { transform: rotate(-10deg); }
+            20%, 40%, 60%, 80% { transform: rotate(10deg); }
+        }
+
+        @keyframes bellGlow {
+            0%, 100% { 
+                filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+            }
+            50% { 
+                filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.9)) drop-shadow(0 0 30px rgba(255, 215, 0, 0.7));
+            }
+        }
+
         .notification-bell img {
             width: 100%;
             height: 100%;
@@ -971,6 +990,10 @@
         <source src="blip.mp3" type="audio/mpeg">
     </audio>
 
+    <audio id="heySeeMeSound" preload="auto" aria-hidden="true">
+        <source src="hei-see-me.mp3" type="audio/mpeg">
+    </audio>
+
     <!-- Gift Modal Overlay -->
     <div class="gift-modal-overlay" id="giftModal" style="display: none;">
         <button class="gift-modal-close" id="giftModalClose" aria-label="Chiudi">
@@ -1036,6 +1059,33 @@
             sound.play().catch(e => console.log('Audio play failed:', e));
         }
 
+        // Funzione per ottenere il subscription ID di OneSignal
+        async function getOneSignalSubscriptionId() {
+            if (!window.OneSignalDeferred) {
+                return null;
+            }
+
+            try {
+                const subscriptionId = await new Promise((resolve) => {
+                    window.OneSignalDeferred.push(async function(OneSignal) {
+                        const isOptedIn = await OneSignal.User.PushSubscription.optedIn;
+                        
+                        if (isOptedIn) {
+                            const id = OneSignal.User.PushSubscription.id;
+                            resolve(id || null);
+                        } else {
+                            resolve(null);
+                        }
+                    });
+                });
+                
+                return subscriptionId;
+            } catch (error) {
+                console.error('Errore nel recupero del subscription ID:', error);
+                return null;
+            }
+        }
+
         // Funzione per aggiornare lo stato del badge notifiche basato su OneSignal
         async function updateNotificationBadge() {
             const badge = document.getElementById('notificationBadge');
@@ -1059,18 +1109,75 @@
                     if (optedIn) {
                         badge.classList.remove('disabled');
                         badge.classList.add('enabled');
+                        stopBellAttentionAnimation();
                     } else {
                         badge.classList.remove('enabled');
                         badge.classList.add('disabled');
+                        startBellAttentionAnimation();
                     }
                 } catch (error) {
                     console.error('Errore nel controllo stato OneSignal:', error);
                     badge.classList.remove('enabled');
                     badge.classList.add('disabled');
+                    startBellAttentionAnimation();
                 }
             } else {
                 badge.classList.remove('enabled');
                 badge.classList.add('disabled');
+                startBellAttentionAnimation();
+            }
+        }
+
+        // Variabile per l'intervallo dell'animazione
+        let bellAttentionInterval = null;
+
+        // Funzione per avviare l'animazione di attenzione della campanella
+        function startBellAttentionAnimation() {
+            // Se l'intervallo è già attivo, non crearne un altro
+            if (bellAttentionInterval) {
+                return;
+            }
+
+            // Funzione per eseguire l'animazione
+            const triggerAnimation = () => {
+                const bell = document.getElementById('notificationBell');
+                const sound = document.getElementById('heySeeMeSound');
+                
+                if (bell && !bell.classList.contains('attention')) {
+                    // Aggiungi la classe per l'animazione
+                    bell.classList.add('attention');
+                    
+                    // Riproduci il suono
+                    if (sound) {
+                        sound.currentTime = 0;
+                        sound.play().catch(e => console.log('Audio play failed:', e));
+                    }
+                    
+                    // Rimuovi la classe dopo l'animazione (500ms)
+                    setTimeout(() => {
+                        bell.classList.remove('attention');
+                    }, 500);
+                }
+            };
+
+            // Esegui subito la prima volta
+            triggerAnimation();
+
+            // Poi ripeti ogni 5 secondi
+            bellAttentionInterval = setInterval(triggerAnimation, 5000);
+        }
+
+        // Funzione per fermare l'animazione di attenzione
+        function stopBellAttentionAnimation() {
+            if (bellAttentionInterval) {
+                clearInterval(bellAttentionInterval);
+                bellAttentionInterval = null;
+                
+                // Rimuovi la classe se presente
+                const bell = document.getElementById('notificationBell');
+                if (bell) {
+                    bell.classList.remove('attention');
+                }
             }
         }
 
