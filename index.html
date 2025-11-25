@@ -927,6 +927,138 @@
             transform: translateY(-2px);
         }
 
+        /* Gift Carousel Styles */
+        .gift-carousel-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            overflow: hidden;
+            padding: 60px 20px;
+        }
+
+        .gift-carousel {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 20px 0;
+        }
+
+        .gift-carousel-item {
+            flex-shrink: 0;
+            width: 250px;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0.5;
+            transform: scale(0.75);
+            filter: blur(2px);
+        }
+
+        .gift-carousel-item.center {
+            opacity: 1;
+            transform: scale(1.15);
+            filter: blur(0);
+            z-index: 10;
+        }
+
+        .gift-carousel-item .product-card {
+            display: block !important;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .gift-carousel-item.center .product-card {
+            box-shadow: 0 20px 60px rgba(255, 215, 0, 0.4);
+            border: 3px solid #ffd700;
+        }
+
+        .gift-carousel-item .product-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .carousel-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 215, 0, 0.9);
+            border: 3px solid #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #2d5016;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            z-index: 20;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .carousel-nav:hover {
+            background: #ffd700;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .carousel-nav.prev {
+            left: 10px;
+        }
+
+        .carousel-nav.next {
+            right: 10px;
+        }
+
+        .carousel-nav:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .carousel-indicators {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .carousel-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .carousel-indicator.active {
+            background: #ffd700;
+            transform: scale(1.3);
+        }
+
+        @media (max-width: 768px) {
+            .gift-carousel-container {
+                padding: 40px 10px;
+            }
+
+            .gift-carousel {
+                gap: 20px;
+            }
+
+            .gift-carousel-item {
+                width: 200px;
+            }
+
+            .carousel-nav {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+            }
+        }
+
         @media (max-width: 768px) {
             .h1-title::after {
                 content: "";
@@ -1603,20 +1735,34 @@
             }
         }
 
-        // Funzione per gestire il gift modal (query string ?gift=N)
+        // Funzione per gestire il gift modal (query string ?gift=N o ?gift=N1,N2,N3)
         function checkGiftParameter() {
             const urlParams = new URLSearchParams(window.location.search);
             const giftParam = urlParams.get('gift');
+            const giftForParam = urlParams.get('giftFor');
             
             if (giftParam !== null) {
-                const giftIndex = parseInt(giftParam, 10);
+                // Controlla se ci sono valori multipli separati da virgola
+                const giftIndices = giftParam.split(',')
+                    .map(index => parseInt(index.trim(), 10))
+                    .filter(index => !isNaN(index));
                 
                 // Funzione per aspettare che products sia popolato
                 const waitForProducts = () => {
                     if (Array.isArray(products) && products.length > 0) {
-                        // Products è pronto, verifica l'indice e mostra il modal
-                        if (!isNaN(giftIndex) && giftIndex >= 0 && giftIndex < products.length) {
-                            showGiftModal(products[giftIndex]);
+                        // Filtra solo gli indici validi
+                        const validProducts = giftIndices
+                            .filter(index => index >= 0 && index < products.length)
+                            .map(index => products[index]);
+                        
+                        if (validProducts.length > 0) {
+                            if (validProducts.length === 1) {
+                                // Singolo prodotto: mostra il modal classico
+                                showGiftModal(validProducts[0], giftForParam);
+                            } else {
+                                // Multipli prodotti: mostra il carosello
+                                showGiftCarousel(validProducts, giftForParam);
+                            }
                         }
                     } else {
                         // Products non è ancora pronto, riprova dopo 300ms
@@ -1630,9 +1776,17 @@
         }
 
         // Funzione per mostrare il gift modal con un prodotto specifico
-        function showGiftModal(product) {
+        function showGiftModal(product, giftFor = null) {
             const modal = document.getElementById('giftModal');
             const modalProduct = document.getElementById('giftModalProduct');
+            const modalSubtitle = document.querySelector('.gift-modal-subtitle');
+            
+            // Aggiorna il sottotitolo in base al parametro giftFor
+            if (giftFor) {
+                modalSubtitle.innerHTML = `Dai un'occhiata a questa nuova idea regalo per la tua richiesta specifica <strong>${giftFor}</strong>.`;
+            } else {
+                modalSubtitle.textContent = 'Dai un\'occhiata a questa nuova idea regalo per te.';
+            }
             
             // Aggiungi tag affiliate al link del prodotto
             const productLink = product.link.includes('?') 
@@ -1675,6 +1829,194 @@
             // Aggiungi tracking per apertura modal
             if (window.beampipe) {
                 window.beampipe('gift-modal-opened');
+            }
+        }
+
+        // Funzione per mostrare il carosello con più prodotti
+        function showGiftCarousel(productsArray, giftFor = null) {
+            const modal = document.getElementById('giftModal');
+            const modalProduct = document.getElementById('giftModalProduct');
+            const modalSubtitle = document.querySelector('.gift-modal-subtitle');
+            
+            // Aggiorna il sottotitolo
+            if (giftFor) {
+                modalSubtitle.innerHTML = `Dai un'occhiata a queste nuove idee regalo per la tua richiesta specifica <strong>${giftFor}</strong>.`;
+            } else {
+                modalSubtitle.textContent = 'Dai un\'occhiata a queste nuove idee regalo per te.';
+            }
+            
+            // Variabile per tracciare l'indice corrente del carosello
+            let currentIndex = 0;
+            
+            // Funzione per creare una card prodotto
+            function createProductCard(product, index) {
+                const productLink = product.link.includes('?') 
+                    ? `${product.link}&tag=suggestgift77-21`
+                    : `${product.link}?tag=suggestgift77-21`;
+                
+                return `
+                    <div class="gift-carousel-item ${index === currentIndex ? 'center' : ''}" data-index="${index}">
+                        <div class="product-card show" 
+                             itemscope 
+                             itemtype="https://schema.org/Product"
+                             onclick="window.open('${productLink}', '_blank', 'noopener,noreferrer'); playBlip(); if (window.beampipe) { window.beampipe('product-gift-carousel-${product.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 25)}'); }"
+                             style="cursor: pointer; display: block;">
+                            <meta itemprop="url" content="${productLink}">
+                            <img src="${product.imageLink}" 
+                                 alt="${product.title}" 
+                                 class="product-image" 
+                                 itemprop="image"
+                                 loading="lazy">
+                            <h3 class="product-title" itemprop="name">${product.title}</h3>
+                            <div class="product-price" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+                                <span itemprop="price">${product.price}</span>
+                                <meta itemprop="priceCurrency" content="EUR">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Funzione per aggiornare il carosello
+            function updateCarousel() {
+                const items = modalProduct.querySelectorAll('.gift-carousel-item');
+                const indicators = modalProduct.querySelectorAll('.carousel-indicator');
+                
+                items.forEach((item, index) => {
+                    if (index === currentIndex) {
+                        item.classList.add('center');
+                    } else {
+                        item.classList.remove('center');
+                    }
+                });
+                
+                indicators.forEach((indicator, index) => {
+                    if (index === currentIndex) {
+                        indicator.classList.add('active');
+                    } else {
+                        indicator.classList.remove('active');
+                    }
+                });
+                
+                // Aggiorna stato bottoni
+                const prevBtn = modalProduct.querySelector('.carousel-nav.prev');
+                const nextBtn = modalProduct.querySelector('.carousel-nav.next');
+                
+                if (prevBtn) prevBtn.disabled = currentIndex === 0;
+                if (nextBtn) nextBtn.disabled = currentIndex === productsArray.length - 1;
+            }
+            
+            // Funzione per andare al prodotto precedente
+            function goToPrev() {
+                if (currentIndex > 0) {
+                    currentIndex--;
+                    updateCarousel();
+                    playBlip();
+                    
+                    if (window.beampipe) {
+                        window.beampipe('carousel-nav-prev');
+                    }
+                }
+            }
+            
+            // Funzione per andare al prodotto successivo
+            function goToNext() {
+                if (currentIndex < productsArray.length - 1) {
+                    currentIndex++;
+                    updateCarousel();
+                    playBlip();
+                    
+                    if (window.beampipe) {
+                        window.beampipe('carousel-nav-next');
+                    }
+                }
+            }
+            
+            // Funzione per andare a un indice specifico
+            function goToIndex(index) {
+                if (index >= 0 && index < productsArray.length && index !== currentIndex) {
+                    currentIndex = index;
+                    updateCarousel();
+                    playBlip();
+                    
+                    if (window.beampipe) {
+                        window.beampipe('carousel-indicator-click');
+                    }
+                }
+            }
+            
+            // Crea il carosello
+            const carouselHTML = `
+                <div class="gift-carousel-container">
+                    <button class="carousel-nav prev" onclick="event.stopPropagation();" id="carouselPrev">‹</button>
+                    <div class="gift-carousel">
+                        ${productsArray.map((product, index) => createProductCard(product, index)).join('')}
+                    </div>
+                    <button class="carousel-nav next" onclick="event.stopPropagation();" id="carouselNext">›</button>
+                    <div class="carousel-indicators">
+                        ${productsArray.map((_, index) => `<div class="carousel-indicator ${index === 0 ? 'active' : ''}" data-index="${index}"></div>`).join('')}
+                    </div>
+                </div>
+            `;
+            
+            modalProduct.innerHTML = carouselHTML;
+            
+            // Aggiungi event listeners
+            const prevBtn = document.getElementById('carouselPrev');
+            const nextBtn = document.getElementById('carouselNext');
+            const indicators = modalProduct.querySelectorAll('.carousel-indicator');
+            
+            if (prevBtn) prevBtn.addEventListener('click', goToPrev);
+            if (nextBtn) nextBtn.addEventListener('click', goToNext);
+            
+            indicators.forEach((indicator, index) => {
+                indicator.addEventListener('click', () => goToIndex(index));
+            });
+            
+            // Supporto swipe su mobile
+            let touchStartX = 0;
+            let touchEndX = 0;
+            
+            const carousel = modalProduct.querySelector('.gift-carousel');
+            
+            carousel.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            });
+            
+            carousel.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            });
+            
+            function handleSwipe() {
+                const swipeThreshold = 50;
+                if (touchStartX - touchEndX > swipeThreshold) {
+                    // Swipe left (next)
+                    goToNext();
+                } else if (touchEndX - touchStartX > swipeThreshold) {
+                    // Swipe right (prev)
+                    goToPrev();
+                }
+            }
+            
+            // Aggiorna stato iniziale
+            updateCarousel();
+            
+            // Blocca lo scroll del body
+            document.body.classList.add('modal-open');
+            
+            // Mostra il modal
+            modal.style.display = 'flex';
+            
+            // Mostra il pulsante di condivisione
+            document.getElementById('shareGift').classList.add('visible');
+            
+            // Nascondi la campanella notifiche
+            document.getElementById('notificationBell').style.display = 'none';
+            
+            // Aggiungi tracking per apertura carosello
+            if (window.beampipe) {
+                window.beampipe('gift-carousel-opened');
             }
         }
 
