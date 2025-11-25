@@ -930,9 +930,9 @@
         /* Gift Carousel Styles */
         .gift-carousel-container {
             position: relative;
-            width: 100%;
-            max-width: 100%;
-            margin: 0 auto;
+            width: 100vw;
+            max-width: 100vw;
+            margin: 0 -20px; /* Compensa il padding del parent */
             overflow: hidden;
             padding: 20px 0;
         }
@@ -940,6 +940,7 @@
         .gift-carousel-wrapper {
             overflow: hidden;
             width: 100%;
+            touch-action: pan-y; /* Permette solo scroll verticale della pagina */
         }
 
         .gift-carousel {
@@ -999,40 +1000,6 @@
             padding: 4px 10px;
         }
 
-        .carousel-nav {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 50px;
-            height: 50px;
-            background: rgba(255, 215, 0, 0.9);
-            border: 3px solid #fff;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: #2d5016;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            z-index: 20;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-
-        .carousel-nav:hover {
-            background: #ffd700;
-            transform: translateY(-50%) scale(1.1);
-        }
-
-        .carousel-nav.prev {
-            left: 10px;
-        }
-
-        .carousel-nav.next {
-            right: 10px;
-        }
-
         .carousel-indicators {
             display: flex;
             justify-content: center;
@@ -1057,6 +1024,8 @@
         @media (max-width: 768px) {
             .gift-carousel-container {
                 padding: 15px 0;
+                margin: 0 -20px;
+                width: 100vw;
                 max-width: 100vw;
             }
 
@@ -1066,7 +1035,8 @@
             }
 
             .gift-carousel-item {
-                width: 180px;
+                width: 65vw; /* Larghezza responsive in base alla viewport */
+                max-width: 250px;
             }
 
             .gift-carousel-item .product-image {
@@ -1082,20 +1052,6 @@
             .gift-carousel-item .product-price {
                 font-size: 0.9em;
                 padding: 3px 8px;
-            }
-
-            .carousel-nav {
-                width: 40px;
-                height: 40px;
-                font-size: 20px;
-            }
-
-            .carousel-nav.prev {
-                left: 5px;
-            }
-
-            .carousel-nav.next {
-                right: 5px;
             }
 
             .carousel-indicators {
@@ -1895,10 +1851,21 @@
             // Funzione per ottenere dimensioni responsive
             function getCarouselDimensions() {
                 const isMobile = window.innerWidth <= 768;
-                return {
-                    itemWidth: isMobile ? 180 : 280,
-                    itemGap: isMobile ? 15 : 20
-                };
+                const viewportWidth = window.innerWidth;
+                
+                if (isMobile) {
+                    // Su mobile: l'item occupa 65% della viewport, max 250px
+                    const itemWidth = Math.min(viewportWidth * 0.65, 250);
+                    return {
+                        itemWidth: itemWidth,
+                        itemGap: 15
+                    };
+                } else {
+                    return {
+                        itemWidth: 280,
+                        itemGap: 20
+                    };
+                }
             }
             
             const dimensions = getCarouselDimensions();
@@ -1975,8 +1942,8 @@
                 const items = modalProduct.querySelectorAll('.gift-carousel-item');
                 const indicators = modalProduct.querySelectorAll('.carousel-indicator');
                 
-                // Evidenzia l'elemento successivo (currentIndex + 1) per compensare lo sfalsamento
-                const centerIndex = currentIndex + 1;
+                // L'elemento centrale è esattamente currentIndex (ora il calcolo è corretto)
+                const centerIndex = currentIndex;
                 
                 // Aggiorna classi center per tutti gli item
                 items.forEach((item, index) => {
@@ -2083,10 +2050,9 @@
                 }
             }
             
-            // Crea il carosello con elementi triplicati
+            // Crea il carosello con elementi triplicati (senza bottoni di navigazione)
             const carouselHTML = `
                 <div class="gift-carousel-container">
-                    <button class="carousel-nav prev" onclick="event.stopPropagation();" id="carouselPrev">‹</button>
                     <div class="gift-carousel-wrapper">
                         <div class="gift-carousel">
                             ${extendedArray.map((product, index) => {
@@ -2095,7 +2061,6 @@
                             }).join('')}
                         </div>
                     </div>
-                    <button class="carousel-nav next" onclick="event.stopPropagation();" id="carouselNext">›</button>
                     <div class="carousel-indicators">
                         ${productsArray.map((_, index) => `<div class="carousel-indicator ${index === 0 ? 'active' : ''}" data-index="${index}"></div>`).join('')}
                     </div>
@@ -2107,13 +2072,8 @@
             // Inizializza la posizione al centro dell'array esteso
             currentIndex = actualStartIndex;
             
-            // Aggiungi event listeners
-            const prevBtn = document.getElementById('carouselPrev');
-            const nextBtn = document.getElementById('carouselNext');
+            // Aggiungi event listeners agli indicatori
             const indicators = modalProduct.querySelectorAll('.carousel-indicator');
-            
-            if (prevBtn) prevBtn.addEventListener('click', goToPrev);
-            if (nextBtn) nextBtn.addEventListener('click', goToNext);
             
             indicators.forEach((indicator, index) => {
                 indicator.addEventListener('click', () => goToIndex(index));
