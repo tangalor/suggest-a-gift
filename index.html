@@ -1087,7 +1087,7 @@
             <div class="confirm-modal-icon">🎁</div>
             <h3 class="confirm-modal-title">Che regalo stai cercando?</h3>
             <p class="confirm-modal-message">
-                Dimmelo e ti proporrò alcune idee regalo a tema con la tua richiesta.
+                Dimmelo e riceverai notifiche push con idee regalo personalizzate in base alla tua ricerca.
             </p>
             <input type="text" 
                    id="giftSearchInput" 
@@ -1096,7 +1096,7 @@
                    maxlength="100">
             <div class="confirm-modal-buttons">
                 <button class="confirm-modal-btn confirm-modal-btn-cancel" id="inputCancel">Annulla</button>
-                <button class="confirm-modal-btn confirm-modal-btn-confirm input-modal-btn-confirm" id="inputConfirm" disabled>Cercalo per me</button>
+                <button class="confirm-modal-btn confirm-modal-btn-confirm input-modal-btn-confirm" id="inputConfirm" disabled>Salva →</button>
             </div>
         </div>
     </div>
@@ -1108,6 +1108,7 @@
         let currentCategory = 'all';
         let currentPriceRange = 'all';
         let showRandomNine = false;
+        let ctaClickCount = 0; // Contatore per i click sui pulsanti CTA
 
         // Funzione per riprodurre il suono blip
         function playBlip() {
@@ -1184,9 +1185,6 @@
                 modal.classList.add('show');
                 document.body.classList.add('modal-open');
                 
-                // Focus sul campo di input
-                setTimeout(() => inputField.focus(), 100);
-                
                 // Event listener per abilitare/disabilitare il bottone conferma
                 function checkInput() {
                     const value = inputField.value.trim();
@@ -1228,7 +1226,7 @@
         }
 
         // Funzione per controllare e mostrare la modale di input se necessario
-        async function checkAndShowInputModal() {
+        async function checkAndShowInputModal(forceCheck = true) {
             // Verifica se l'utente è iscritto alle notifiche
             const isOptedIn = await new Promise((resolve) => {
                 if (!window.OneSignalDeferred) {
@@ -1257,6 +1255,11 @@
             
             // Se ha già un tag, non mostrare la modale
             if (hasTag) {
+                return;
+            }
+
+            // Se forceCheck è false, non mostrare la modale
+            if (!forceCheck) {
                 return;
             }
 
@@ -2007,8 +2010,12 @@
             // Riproduci il suono
             playBlip();
             
-            // Controlla e mostra la modale di input se necessario
-            await checkAndShowInputModal();
+            // Incrementa il contatore dei click
+            ctaClickCount++;
+            
+            // Controlla e mostra la modale di input se necessario (solo ogni 3 click)
+            const shouldShowModal = ctaClickCount % 3 === 0;
+            await checkAndShowInputModal(shouldShowModal);
             
             // Attiva la modalità random di 9 prodotti
             showRandomNine = true;
@@ -2036,8 +2043,12 @@
             // Riproduci il suono
             playBlip();
             
-            // Controlla e mostra la modale di input se necessario
-            await checkAndShowInputModal();
+            // Incrementa il contatore dei click
+            ctaClickCount++;
+            
+            // Controlla e mostra la modale di input se necessario (solo ogni 3 click)
+            const shouldShowModal = ctaClickCount % 3 === 0;
+            await checkAndShowInputModal(shouldShowModal);
             
             // Attiva la modalità random di 9 prodotti
             showRandomNine = true;
