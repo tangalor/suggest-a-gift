@@ -937,13 +937,18 @@
             padding: 60px 20px;
         }
 
+        .gift-carousel-wrapper {
+            overflow: hidden;
+            width: 100%;
+        }
+
         .gift-carousel {
             display: flex;
             align-items: center;
-            justify-content: center;
             gap: 30px;
             transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             padding: 20px 0;
+            will-change: transform;
         }
 
         .gift-carousel-item {
@@ -1841,9 +1846,17 @@
             
             // Variabile per tracciare l'indice corrente del carosello
             let currentIndex = 0;
+            const itemWidth = 250; // Larghezza di ogni item
+            const itemGap = 30; // Gap tra gli item
+            const totalItemWidth = itemWidth + itemGap;
+            
+            // Crea un array esteso con elementi duplicati per l'effetto circolare
+            // Duplichiamo l'intero array prima e dopo per seamless loop
+            const extendedArray = [...productsArray, ...productsArray, ...productsArray];
+            const actualStartIndex = productsArray.length; // Inizia dal set centrale
             
             // Funzione per creare una card prodotto
-            function createProductCard(product, index) {
+            function createProductCard(product, index, realIndex) {
                 const productLink = product.link.includes('?') 
                     ? `${product.link}&tag=suggestgift77-21`
                     : `${product.link}?tag=suggestgift77-21`;
@@ -1854,7 +1867,7 @@
                     : product.title;
                 
                 return `
-                    <div class="gift-carousel-item ${index === currentIndex ? 'center' : ''}" data-index="${index}">
+                    <div class="gift-carousel-item" data-index="${index}" data-real-index="${realIndex}">
                         <div class="product-card show" 
                              itemscope 
                              itemtype="https://schema.org/Product"
@@ -1876,11 +1889,20 @@
                 `;
             }
             
-            // Funzione per aggiornare il carosello
-            function updateCarousel() {
+            // Funzione per calcolare l'offset di traslazione
+            function calculateOffset(index) {
+                const containerWidth = modalProduct.querySelector('.gift-carousel-container').offsetWidth;
+                const centerOffset = containerWidth / 2 - itemWidth / 2;
+                return centerOffset - (index * totalItemWidth);
+            }
+            
+            // Funzione per aggiornare il carosello con scroll
+            function updateCarousel(animate = true) {
+                const carousel = modalProduct.querySelector('.gift-carousel');
                 const items = modalProduct.querySelectorAll('.gift-carousel-item');
                 const indicators = modalProduct.querySelectorAll('.carousel-indicator');
                 
+                // Aggiorna classi center per tutti gli item
                 items.forEach((item, index) => {
                     if (index === currentIndex) {
                         item.classList.add('center');
@@ -1889,23 +1911,57 @@
                     }
                 });
                 
+                // Aggiorna indicatori basandosi sul realIndex
+                const realIndex = currentIndex % productsArray.length;
                 indicators.forEach((indicator, index) => {
-                    if (index === currentIndex) {
+                    if (index === realIndex) {
                         indicator.classList.add('active');
                     } else {
                         indicator.classList.remove('active');
                     }
                 });
                 
-                // Per un carosello circolare, non disabilitare mai i bottoni
-                // (rimuoviamo la disabilitazione)
+                // Applica la trasformazione per centrare l'elemento corrente
+                const offset = calculateOffset(currentIndex);
+                if (animate) {
+                    carousel.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+                } else {
+                    carousel.style.transition = 'none';
+                }
+                carousel.style.transform = `translateX(${offset}px)`;
+                
+                // Dopo la transizione, controlla se dobbiamo fare il "jump" per continuità
+                if (animate) {
+                    setTimeout(() => {
+                        checkAndResetPosition();
+                    }, 500);
+                }
             }
             
-            // Funzione per andare al prodotto precedente (circolare)
+            // Funzione per resettare la posizione quando raggiungiamo i limiti (seamless loop)
+            function checkAndResetPosition() {
+                const carousel = modalProduct.querySelector('.gift-carousel');
+                
+                // Se siamo troppo a destra (terzo set), torna al set centrale
+                if (currentIndex >= actualStartIndex + productsArray.length) {
+                    carousel.style.transition = 'none';
+                    currentIndex = currentIndex - productsArray.length;
+                    const offset = calculateOffset(currentIndex);
+                    carousel.style.transform = `translateX(${offset}px)`;
+                }
+                // Se siamo troppo a sinistra (primo set), torna al set centrale
+                else if (currentIndex < actualStartIndex) {
+                    carousel.style.transition = 'none';
+                    currentIndex = currentIndex + productsArray.length;
+                    const offset = calculateOffset(currentIndex);
+                    carousel.style.transform = `translateX(${offset}px)`;
+                }
+            }
+            
+            // Funzione per andare al prodotto precedente
             function goToPrev() {
-                // Se siamo al primo elemento, vai all'ultimo (circolare)
-                currentIndex = (currentIndex - 1 + productsArray.length) % productsArray.length;
-                updateCarousel();
+                currentIndex--;
+                updateCarousel(true);
                 playBlip();
                 
                 if (window.beampipe) {
@@ -1913,11 +1969,10 @@
                 }
             }
             
-            // Funzione per andare al prodotto successivo (circolare)
+            // Funzione per andare al prodotto successivo
             function goToNext() {
-                // Se siamo all'ultimo elemento, vai al primo (circolare)
-                currentIndex = (currentIndex + 1) % productsArray.length;
-                updateCarousel();
+                currentIndex++;
+                updateCarousel(true);
                 playBlip();
                 
                 if (window.beampipe) {
@@ -1926,10 +1981,24 @@
             }
             
             // Funzione per andare a un indice specifico
-            function goToIndex(index) {
-                if (index >= 0 && index < productsArray.length && index !== currentIndex) {
-                    currentIndex = index;
-                    updateCarousel();
+            function goToIndex(targetRealIndex) {
+                if (targetRealIndex >= 0 && targetRealIndex < productsArray.length) {
+                    // Trova l'indice più vicino nel set corrente
+                    const currentRealIndex = currentIndex % productsArray.length;
+                    const diff = targetRealIndex - currentRealIndex;
+                    
+                    // Calcola il percorso più breve
+                    let shortestPath = diff;
+                    if (Math.abs(diff) > productsArray.length / 2) {
+                        if (diff > 0) {
+                            shortestPath = diff - productsArray.length;
+                        } else {
+                            shortestPath = diff + productsArray.length;
+                        }
+                    }
+                    
+                    currentIndex += shortestPath;
+                    updateCarousel(true);
                     playBlip();
                     
                     if (window.beampipe) {
@@ -1938,12 +2007,17 @@
                 }
             }
             
-            // Crea il carosello
+            // Crea il carosello con elementi triplicati
             const carouselHTML = `
                 <div class="gift-carousel-container">
                     <button class="carousel-nav prev" onclick="event.stopPropagation();" id="carouselPrev">‹</button>
-                    <div class="gift-carousel">
-                        ${productsArray.map((product, index) => createProductCard(product, index)).join('')}
+                    <div class="gift-carousel-wrapper">
+                        <div class="gift-carousel">
+                            ${extendedArray.map((product, index) => {
+                                const realIndex = index % productsArray.length;
+                                return createProductCard(product, index, realIndex);
+                            }).join('')}
+                        </div>
                     </div>
                     <button class="carousel-nav next" onclick="event.stopPropagation();" id="carouselNext">›</button>
                     <div class="carousel-indicators">
@@ -1953,6 +2027,9 @@
             `;
             
             modalProduct.innerHTML = carouselHTML;
+            
+            // Inizializza la posizione al centro dell'array esteso
+            currentIndex = actualStartIndex;
             
             // Aggiungi event listeners
             const prevBtn = document.getElementById('carouselPrev');
@@ -1992,8 +2069,10 @@
                 }
             }
             
-            // Aggiorna stato iniziale
-            updateCarousel();
+            // Inizializza il carosello dopo un breve delay per permettere il rendering
+            setTimeout(() => {
+                updateCarousel(false); // false = nessuna animazione iniziale
+            }, 50);
             
             // Blocca lo scroll del body
             document.body.classList.add('modal-open');
