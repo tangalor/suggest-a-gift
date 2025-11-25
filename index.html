@@ -1012,12 +1012,6 @@
             right: 10px;
         }
 
-        .carousel-nav:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
-
         .carousel-indicators {
             display: flex;
             justify-content: center;
@@ -1854,6 +1848,11 @@
                     ? `${product.link}&tag=suggestgift77-21`
                     : `${product.link}?tag=suggestgift77-21`;
                 
+                // Tronca il titolo a 77 caratteri e aggiungi "..." se necessario
+                const displayTitle = product.title.length > 77 
+                    ? product.title.substring(0, 77) + '...'
+                    : product.title;
+                
                 return `
                     <div class="gift-carousel-item ${index === currentIndex ? 'center' : ''}" data-index="${index}">
                         <div class="product-card show" 
@@ -1867,7 +1866,7 @@
                                  class="product-image" 
                                  itemprop="image"
                                  loading="lazy">
-                            <h3 class="product-title" itemprop="name">${product.title}</h3>
+                            <h3 class="product-title" itemprop="name">${displayTitle}</h3>
                             <div class="product-price" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
                                 <span itemprop="price">${product.price}</span>
                                 <meta itemprop="priceCurrency" content="EUR">
@@ -1898,37 +1897,31 @@
                     }
                 });
                 
-                // Aggiorna stato bottoni
-                const prevBtn = modalProduct.querySelector('.carousel-nav.prev');
-                const nextBtn = modalProduct.querySelector('.carousel-nav.next');
-                
-                if (prevBtn) prevBtn.disabled = currentIndex === 0;
-                if (nextBtn) nextBtn.disabled = currentIndex === productsArray.length - 1;
+                // Per un carosello circolare, non disabilitare mai i bottoni
+                // (rimuoviamo la disabilitazione)
             }
             
-            // Funzione per andare al prodotto precedente
+            // Funzione per andare al prodotto precedente (circolare)
             function goToPrev() {
-                if (currentIndex > 0) {
-                    currentIndex--;
-                    updateCarousel();
-                    playBlip();
-                    
-                    if (window.beampipe) {
-                        window.beampipe('carousel-nav-prev');
-                    }
+                // Se siamo al primo elemento, vai all'ultimo (circolare)
+                currentIndex = (currentIndex - 1 + productsArray.length) % productsArray.length;
+                updateCarousel();
+                playBlip();
+                
+                if (window.beampipe) {
+                    window.beampipe('carousel-nav-prev');
                 }
             }
             
-            // Funzione per andare al prodotto successivo
+            // Funzione per andare al prodotto successivo (circolare)
             function goToNext() {
-                if (currentIndex < productsArray.length - 1) {
-                    currentIndex++;
-                    updateCarousel();
-                    playBlip();
-                    
-                    if (window.beampipe) {
-                        window.beampipe('carousel-nav-next');
-                    }
+                // Se siamo all'ultimo elemento, vai al primo (circolare)
+                currentIndex = (currentIndex + 1) % productsArray.length;
+                updateCarousel();
+                playBlip();
+                
+                if (window.beampipe) {
+                    window.beampipe('carousel-nav-next');
                 }
             }
             
