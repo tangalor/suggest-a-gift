@@ -976,7 +976,9 @@
         }
 
         .gift-carousel-item.center .product-card {
-            box-shadow: 0 20px 60px rgba(255, 215, 0, 0.4);
+            box-shadow: 0 30px 80px rgba(255, 215, 0, 0.25), 
+                        0 15px 40px rgba(255, 215, 0, 0.2),
+                        0 5px 15px rgba(255, 215, 0, 0.15);
             border: 3px solid #ffd700;
         }
 
@@ -1991,6 +1993,12 @@
                     currentIndex = currentIndex - productsArray.length;
                     const offset = calculateOffset(currentIndex);
                     carousel.style.transform = `translateX(${offset}px)`;
+                    
+                    // Forza un reflow per applicare il cambio senza transizione
+                    carousel.offsetHeight;
+                    
+                    // Riapplica la classe center all'elemento corretto
+                    updateCarouselClasses();
                 }
                 // Se siamo troppo a sinistra (primo set), torna al set centrale
                 else if (currentIndex < actualStartIndex) {
@@ -1998,7 +2006,40 @@
                     currentIndex = currentIndex + productsArray.length;
                     const offset = calculateOffset(currentIndex);
                     carousel.style.transform = `translateX(${offset}px)`;
+                    
+                    // Forza un reflow per applicare il cambio senza transizione
+                    carousel.offsetHeight;
+                    
+                    // Riapplica la classe center all'elemento corretto
+                    updateCarouselClasses();
                 }
+            }
+            
+            // Funzione per aggiornare solo le classi CSS senza animazione
+            function updateCarouselClasses() {
+                const items = modalProduct.querySelectorAll('.gift-carousel-item');
+                const indicators = modalProduct.querySelectorAll('.carousel-indicator');
+                
+                const centerIndex = currentIndex;
+                
+                // Aggiorna classi center per tutti gli item
+                items.forEach((item, index) => {
+                    if (index === centerIndex) {
+                        item.classList.add('center');
+                    } else {
+                        item.classList.remove('center');
+                    }
+                });
+                
+                // Aggiorna indicatori
+                const realIndex = centerIndex % productsArray.length;
+                indicators.forEach((indicator, index) => {
+                    if (index === realIndex) {
+                        indicator.classList.add('active');
+                    } else {
+                        indicator.classList.remove('active');
+                    }
+                });
             }
             
             // Funzione per andare al prodotto precedente
