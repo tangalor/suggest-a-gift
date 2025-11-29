@@ -685,6 +685,8 @@
             cursor: pointer;
             display: none;
             position: relative;
+            text-decoration: none;
+            color: inherit;
         }
 
         .product-card.show {
@@ -917,6 +919,8 @@
             display: block !important;
             cursor: pointer;
             transition: transform 0.2s ease;
+            text-decoration: none;
+            color: inherit;
         }
 
         .gift-modal-product .product-card:hover {
@@ -973,6 +977,8 @@
             cursor: pointer;
             transition: transform 0.2s ease;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-decoration: none;
+            color: inherit;
         }
 
         .gift-carousel-item.center .product-card {
@@ -1792,13 +1798,16 @@
                 ? `${product.link}&tag=suggestgift77-21`
                 : `${product.link}?tag=suggestgift77-21`;
             
-            // Crea la card del prodotto nel modal (senza link interno, cliccabile tutta la card)
+            // Crea la card del prodotto nel modal (link diretto con href)
             modalProduct.innerHTML = `
-                <div class="product-card show" 
-                     itemscope 
-                     itemtype="https://schema.org/Product"
-                     onclick="window.open('${productLink}', '_blank', 'noopener,noreferrer'); playBlip(); if (window.beampipe) { window.beampipe('product-gift-modal-${product.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 25)}'); }"
-                     style="cursor: pointer; display: block;">
+                <a href="${productLink}"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="product-card show" 
+                   itemscope 
+                   itemtype="https://schema.org/Product"
+                   onclick="playBlip(); if (window.beampipe) { window.beampipe('product-gift-modal-${product.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 25)}'); }"
+                   style="cursor: pointer; display: block;">
                     <meta itemprop="url" content="${productLink}">
                     <img src="${product.imageLink}" 
                          alt="${product.title}" 
@@ -1810,7 +1819,7 @@
                         <span itemprop="price">${product.price}</span>
                         <meta itemprop="priceCurrency" content="EUR">
                     </div>
-                </div>
+                </a>
             `;
             
             // Blocca lo scroll del body
@@ -1890,11 +1899,14 @@
                 
                 return `
                     <div class="gift-carousel-item" data-index="${index}" data-real-index="${realIndex}">
-                        <div class="product-card show" 
-                             itemscope 
-                             itemtype="https://schema.org/Product"
-                             onclick="window.open('${productLink}', '_blank', 'noopener,noreferrer'); playBlip(); if (window.beampipe) { window.beampipe('product-gift-carousel-${product.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 25)}'); }"
-                             style="cursor: pointer; display: block;">
+                        <a href="${productLink}"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="product-card show" 
+                           itemscope 
+                           itemtype="https://schema.org/Product"
+                           onclick="playBlip(); if (window.beampipe) { window.beampipe('product-gift-carousel-${product.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 25)}'); }"
+                           style="cursor: pointer; display: block;">
                             <meta itemprop="url" content="${productLink}">
                             <img src="${product.imageLink}" 
                                  alt="${product.title}" 
@@ -1906,7 +1918,7 @@
                                 <span itemprop="price">${product.price}</span>
                                 <meta itemprop="priceCurrency" content="EUR">
                             </div>
-                        </div>
+                        </a>
                     </div>
                 `;
             }
@@ -2381,11 +2393,13 @@
                 grid.style.display = 'grid';
                 
                 filteredProducts.forEach(product => {
-                    const card = document.createElement('div');
+                    const card = document.createElement('a');
                     card.className = 'product-card show';
                     card.setAttribute('role', 'listitem');
                     card.setAttribute('itemscope', '');
                     card.setAttribute('itemtype', 'https://schema.org/Product');
+                    card.setAttribute('target', '_blank');
+                    card.setAttribute('rel', 'noopener noreferrer');
                     
                     // Crea data-track dal titolo (primi 25 caratteri, lowercase, slug format)
                     const trackValue = 'product-' + product.title.substring(0, 25).toLowerCase()
@@ -2399,6 +2413,9 @@
                         ? `${product.link}&tag=suggestgift77-21`
                         : `${product.link}?tag=suggestgift77-21`;
                     
+                    // Imposta l'href direttamente
+                    card.href = productUrl;
+                    
                     card.innerHTML = `
                         <div class="product-image">
                             <img src="${product.imageLink}" alt="${product.title}" itemprop="image" loading="lazy">
@@ -2411,10 +2428,11 @@
                         <button class="product-share-btn" data-track="product-share-btn" data-product-url="${productUrl}" data-product-title="${product.title.replace(/"/g, '&quot;')}" aria-label="Condividi questo prodotto"></button>
                     `;
                     
-                    // Event listener per il click sulla card (apre il prodotto)
+                    // Event listener per il click sulla card (tracking e audio)
                     card.onclick = (e) => {
                         // Se il click è sul pulsante condividi, non aprire il prodotto
                         if (e.target.classList.contains('product-share-btn')) {
+                            e.preventDefault();
                             return;
                         }
                         
@@ -2425,16 +2443,13 @@
                         
                         // Riproduci il suono
                         playBlip();
-                        
-                        if (product.link !== '#') {
-                            window.open(productUrl, '_blank');
-                        }
                     };
                     
                     // Event listener per il pulsante condividi
                     const shareBtn = card.querySelector('.product-share-btn');
                     shareBtn.onclick = async (e) => {
                         e.stopPropagation(); // Previeni il click sulla card
+                        e.preventDefault(); // Previeni la navigazione del link
                         
                         playBlip();
                         
