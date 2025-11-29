@@ -1653,14 +1653,14 @@
                                 window.beampipe('notification-permission-disabled');
                             }
                             
-                            // Mostra alert personalizzato
+                            // Mostra alert personalizzato e aspetta che l'utente clicchi OK
                             await showAlertModal(
                                 'Notifiche disabilitate',
                                 'Le notifiche push sono state disabilitate con successo. Non riceverai più nuove idee regalo.',
                                 '✅'
                             );
                             
-                            // Refresh della pagina per aggiornare l'icona e il badge
+                            // Refresh della pagina DOPO che l'utente ha cliccato OK
                             window.location.reload();
                         } catch (error) {
                             console.error('Errore nella disabilitazione:', error);
@@ -1712,14 +1712,14 @@
                         });
                     }
                     
-                    // Mostra alert personalizzato
+                    // Mostra alert personalizzato e aspetta che l'utente clicchi OK
                     await showAlertModal(
                         'Notifiche abilitate',
                         'Le notifiche push sono state abilitate con successo! Presto riceverai nuove idee regalo.',
                         '✅'
                     );
                     
-                    // Refresh della pagina per aggiornare l'icona e il badge
+                    // Refresh della pagina DOPO che l'utente ha cliccato OK
                     window.location.reload();
                 } else {
                     // Track evento
