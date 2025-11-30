@@ -1019,6 +1019,7 @@
             margin: 0 -20px; /* Compensa il padding del parent */
             overflow: hidden;
             padding: 36px 0; /* +20% da 30px */
+            background: transparent; /* Stesso sfondo della pagina */
         }
 
         .gift-carousel-wrapper {
@@ -2878,11 +2879,22 @@
             // Renderizza con 9 prodotti random
             renderProducts();
             
-            // Scroll alla griglia prodotti
-            document.getElementById('productsGrid').scrollIntoView({ 
-                behavior: 'smooth',
-                block: 'start'
-            });
+            // Scroll al titolo del carosello (con un piccolo delay per attendere il rendering)
+            setTimeout(() => {
+                const carouselTitle = document.querySelector('.carousel-title');
+                if (carouselTitle) {
+                    carouselTitle.scrollIntoView({ 
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                } else {
+                    // Fallback: scroll alla griglia prodotti se il carosello non esiste
+                    document.getElementById('productsGrid').scrollIntoView({ 
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            }, 100);
         });
 
         // Gestione bottone CTA secondario (in basso)
