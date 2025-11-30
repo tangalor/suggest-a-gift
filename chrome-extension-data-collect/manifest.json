@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Data Collect - Amazon Product Helper",
+  "version": "2.2.1",
+  "description": "Raccolta dati prodotti Amazon per analisi e gestione",
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://www.amazon.it/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://www.amazon.it/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}
