@@ -1793,14 +1793,9 @@
                 modalSubtitle.textContent = 'Dai un\'occhiata a questa nuova idea regalo per te.';
             }
             
-            // Aggiungi tag affiliate al link del prodotto
-            const productLink = product.link.includes('?') 
-                ? `${product.link}&tag=suggestgift77-21`
-                : `${product.link}?tag=suggestgift77-21`;
-            
             // Crea la card del prodotto nel modal (link diretto con href)
             modalProduct.innerHTML = `
-                <a href="${productLink}"
+                <a href="${product.link}"
                    target="_blank"
                    rel="noopener noreferrer"
                    class="product-card show" 
@@ -1808,7 +1803,7 @@
                    itemtype="https://schema.org/Product"
                    onclick="playBlip(); if (window.beampipe) { window.beampipe('product-gift-modal-${product.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 25)}'); }"
                    style="cursor: pointer; display: block;">
-                    <meta itemprop="url" content="${productLink}">
+                    <meta itemprop="url" content="${product.link}">
                     <img src="${product.imageLink}" 
                          alt="${product.title}" 
                          class="product-image" 
@@ -1862,7 +1857,7 @@
                 const viewportWidth = window.innerWidth;
                 
                 if (isMobile) {
-                    // Su mobile: l'item occupa 65% della viewport, max 250px
+                    // Su mobile: item occupa 65% della viewport, max 250px
                     const itemWidth = Math.min(viewportWidth * 0.65, 250);
                     return {
                         itemWidth: itemWidth,
@@ -1888,10 +1883,6 @@
             
             // Funzione per creare una card prodotto
             function createProductCard(product, index, realIndex) {
-                const productLink = product.link.includes('?') 
-                    ? `${product.link}&tag=suggestgift77-21`
-                    : `${product.link}?tag=suggestgift77-21`;
-                
                 // Tronca il titolo a 77 caratteri e aggiungi "..." se necessario
                 const displayTitle = product.title.length > 77 
                     ? product.title.substring(0, 77) + '...'
@@ -1899,7 +1890,7 @@
                 
                 return `
                     <div class="gift-carousel-item" data-index="${index}" data-real-index="${realIndex}">
-                        <a href="${productLink}"
+                        <a href="${product.link}"
                            target="_blank"
                            rel="noopener noreferrer"
                            class="product-card show" 
@@ -1907,7 +1898,7 @@
                            itemtype="https://schema.org/Product"
                            onclick="playBlip(); if (window.beampipe) { window.beampipe('product-gift-carousel-${product.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 25)}'); }"
                            style="cursor: pointer; display: block;">
-                            <meta itemprop="url" content="${productLink}">
+                            <meta itemprop="url" content="${product.link}">
                             <img src="${product.imageLink}" 
                                  alt="${product.title}" 
                                  class="product-image" 
@@ -2408,13 +2399,8 @@
                         .replace(/-+$/, '');
                     card.setAttribute('data-track', trackValue);
                     
-                    // Aggiungi tag affiliate al link del prodotto
-                    const productUrl = product.link.includes('?') 
-                        ? `${product.link}&tag=suggestgift77-21`
-                        : `${product.link}?tag=suggestgift77-21`;
-                    
                     // Imposta l'href direttamente
-                    card.href = productUrl;
+                    card.href = product.link;
                     
                     card.innerHTML = `
                         <div class="product-image">
@@ -2425,7 +2411,7 @@
                             <meta itemprop="priceCurrency" content="EUR">
                             <span itemprop="price">${product.price}</span>
                         </div>
-                        <button class="product-share-btn" data-track="product-share-btn" data-product-url="${productUrl}" data-product-title="${product.title.replace(/"/g, '&quot;')}" aria-label="Condividi questo prodotto"></button>
+                        <button class="product-share-btn" data-track="product-share-btn" data-product-url="${product.link}" data-product-title="${product.title.replace(/"/g, '&quot;')}" aria-label="Condividi questo prodotto"></button>
                     `;
                     
                     // Event listener per il click sulla card (tracking e audio)
