@@ -2596,15 +2596,17 @@
         
         // Funzione per renderizzare il carosello nella pagina principale
         function renderProductsCarousel(productsArray, container) {
+            // Crea un array esteso triplicato per l'effetto circolare infinito
+            const extendedArray = [...productsArray, ...productsArray, ...productsArray];
+            
             // Crea la struttura del carosello simile a quella della modale
             container.innerHTML = `
                 <div class="main-carousel-wrapper">
                     <h2 class="carousel-title">✨ Scopri queste idee regalo</h2>
                     <div class="gift-carousel-container">
-                        <button class="carousel-nav prev" aria-label="Prodotto precedente">❮</button>
                         <div class="gift-carousel-wrapper">
                             <div class="gift-carousel">
-                                ${productsArray.map((product, index) => {
+                                ${extendedArray.map((product, index) => {
                                     const displayTitle = product.title.length > 77 
                                         ? product.title.substring(0, 77) + '...'
                                         : product.title;
@@ -2636,12 +2638,6 @@
                                 }).join('')}
                             </div>
                         </div>
-                        <button class="carousel-nav next" aria-label="Prodotto successivo">❯</button>
-                    </div>
-                    <div class="carousel-indicators">
-                        ${productsArray.map((_, index) => 
-                            `<button class="carousel-indicator ${index === 0 ? 'active' : ''}" data-index="${index}" aria-label="Vai al prodotto ${index + 1}"></button>`
-                        ).join('')}
                     </div>
                 </div>
             `;
@@ -2652,12 +2648,10 @@
         
         // Funzione per inizializzare il carosello principale
         function initMainCarousel(container, totalItems) {
-            let currentIndex = 0;
+            // Inizia dal set centrale (il secondo gruppo di prodotti nell'array triplicato)
+            let currentIndex = totalItems;
             
             const carousel = container.querySelector('.gift-carousel');
-            const prevBtn = container.querySelector('.carousel-nav.prev');
-            const nextBtn = container.querySelector('.carousel-nav.next');
-            const indicators = container.querySelectorAll('.carousel-indicator');
             const items = container.querySelectorAll('.gift-carousel-item');
             
             function getCarouselDimensions() {
@@ -2703,14 +2697,6 @@
                     }
                 });
                 
-                indicators.forEach((indicator, index) => {
-                    if (index === currentIndex) {
-                        indicator.classList.add('active');
-                    } else {
-                        indicator.classList.remove('active');
-                    }
-                });
-                
                 const offset = calculateOffset(currentIndex);
                 if (animate) {
                     carousel.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
@@ -2718,30 +2704,83 @@
                     carousel.style.transition = 'none';
                 }
                 carousel.style.transform = `translateX(${offset}px)`;
+                
+                // Dopo la transizione, controlla se dobbiamo resettare per il loop infinito
+                if (animate) {
+                    setTimeout(() => {
+                        checkAndResetPosition();
+                    }, 500);
+                }
+            }
+            
+            function checkAndResetPosition() {
+                // Se siamo troppo a destra (terzo set), salta al set centrale
+                if (currentIndex >= totalItems * 2) {
+                    carousel.style.transition = 'none';
+                    items.forEach(item => item.style.transition = 'none');
+                    
+                    currentIndex = currentIndex - totalItems;
+                    const offset = calculateOffset(currentIndex);
+                    carousel.style.transform = `translateX(${offset}px)`;
+                    
+                    // Aggiorna le classi center
+                    items.forEach((item, index) => {
+                        if (index === currentIndex) {
+                            item.classList.add('center');
+                        } else {
+                            item.classList.remove('center');
+                        }
+                    });
+                    
+                    // Forza un reflow
+                    carousel.offsetHeight;
+                    
+                    // Riattiva le transizioni
+                    setTimeout(() => {
+                        carousel.style.transition = '';
+                        items.forEach(item => item.style.transition = '');
+                    }, 10);
+                }
+                // Se siamo troppo a sinistra (primo set), salta al set centrale
+                else if (currentIndex < totalItems) {
+                    carousel.style.transition = 'none';
+                    items.forEach(item => item.style.transition = 'none');
+                    
+                    currentIndex = currentIndex + totalItems;
+                    const offset = calculateOffset(currentIndex);
+                    carousel.style.transform = `translateX(${offset}px)`;
+                    
+                    // Aggiorna le classi center
+                    items.forEach((item, index) => {
+                        if (index === currentIndex) {
+                            item.classList.add('center');
+                        } else {
+                            item.classList.remove('center');
+                        }
+                    });
+                    
+                    // Forza un reflow
+                    carousel.offsetHeight;
+                    
+                    // Riattiva le transizioni
+                    setTimeout(() => {
+                        carousel.style.transition = '';
+                        items.forEach(item => item.style.transition = '');
+                    }, 10);
+                }
             }
             
             function goToNext() {
-                currentIndex = (currentIndex + 1) % totalItems;
+                currentIndex++;
                 updateCarousel();
                 playBlip();
             }
             
             function goToPrev() {
-                currentIndex = (currentIndex - 1 + totalItems) % totalItems;
+                currentIndex--;
                 updateCarousel();
                 playBlip();
             }
-            
-            prevBtn.addEventListener('click', goToPrev);
-            nextBtn.addEventListener('click', goToNext);
-            
-            indicators.forEach((indicator, index) => {
-                indicator.addEventListener('click', () => {
-                    currentIndex = index;
-                    updateCarousel();
-                    playBlip();
-                });
-            });
             
             // Touch/swipe support
             let startX = 0;
@@ -2776,7 +2815,7 @@
             // Responsive resize
             window.addEventListener('resize', () => updateCarousel(false));
             
-            // Inizializza
+            // Inizializza senza animazione
             updateCarousel(false);
         }
 
