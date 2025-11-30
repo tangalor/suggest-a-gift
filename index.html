@@ -669,6 +669,86 @@
             box-shadow: 0 4px 15px rgba(255, 215, 0, 0.5);
         }
 
+        /* Main Carousel Styles */
+        .products-carousel-container {
+            margin: 30px 0;
+            padding: 20px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+        }
+
+        .main-carousel-wrapper {
+            position: relative;
+        }
+
+        .carousel-title {
+            text-align: center;
+            color: #ffd700;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .carousel-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(45, 80, 22, 0.9);
+            color: #ffd700;
+            border: 2px solid #ffd700;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .carousel-nav:hover {
+            background: rgba(45, 80, 22, 1);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .carousel-nav.prev {
+            left: 10px;
+        }
+
+        .carousel-nav.next {
+            right: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .products-carousel-container {
+                margin: 20px -20px;
+                padding: 15px 0;
+                border-radius: 0;
+            }
+
+            .carousel-title {
+                font-size: 1.4em;
+                margin-bottom: 15px;
+                padding: 0 20px;
+            }
+
+            .carousel-nav {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+
+            .carousel-nav.prev {
+                left: 5px;
+            }
+
+            .carousel-nav.next {
+                right: 5px;
+            }
+        }
+
         .products-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -1132,6 +1212,9 @@
 
         <!-- Products Section -->
         <section aria-label="Prodotti suggeriti">
+            <div class="products-carousel-container" id="productsCarouselContainer" style="display: none;">
+                <!-- Il carosello verrà inserito qui -->
+            </div>
             <div class="products-grid" id="productsGrid" role="list"></div>
             <div class="no-results" id="noResults" role="alert">Nessun prodotto trovato con i filtri selezionati</div>
         </section>
@@ -2351,8 +2434,11 @@
         // Render prodotti
         function renderProducts() {
             const grid = document.getElementById('productsGrid');
+            const carouselContainer = document.getElementById('productsCarouselContainer');
             const noResults = document.getElementById('noResults');
             grid.innerHTML = '';
+            carouselContainer.innerHTML = '';
+            carouselContainer.style.display = 'none';
             
             let filteredProducts = products.filter(product => {
                 const recipientMatch = currentRecipient === 'all' || product.recipient === currentRecipient;
@@ -2368,12 +2454,12 @@
                 return recipientMatch && categoryMatch && priceMatch;
             });
 
-            // Se è attiva la modalità random, mostra solo 9 prodotti casuali
-            if (showRandomNine && filteredProducts.length > 9) {
-                // Shuffle array e prendi i primi 9
+            // Se è attiva la modalità random, mostra 30 prodotti casuali (21 carosello + 9 griglia)
+            if (showRandomNine && filteredProducts.length > 30) {
+                // Shuffle array e prendi i primi 30
                 filteredProducts = filteredProducts
                     .sort(() => Math.random() - 0.5)
-                    .slice(0, 9);
+                    .slice(0, 30);
             }
 
             if (filteredProducts.length === 0) {
@@ -2381,107 +2467,317 @@
                 grid.style.display = 'none';
             } else {
                 noResults.classList.remove('show');
-                grid.style.display = 'grid';
                 
-                filteredProducts.forEach(product => {
-                    const card = document.createElement('a');
-                    card.className = 'product-card show';
-                    card.setAttribute('role', 'listitem');
-                    card.setAttribute('itemscope', '');
-                    card.setAttribute('itemtype', 'https://schema.org/Product');
-                    card.setAttribute('target', '_blank');
-                    card.setAttribute('rel', 'noopener noreferrer');
+                // Se la modalità random è attiva e abbiamo almeno 21 prodotti, mostra il carosello
+                if (showRandomNine && filteredProducts.length >= 21) {
+                    // Primi 21 prodotti per il carosello
+                    const carouselProducts = filteredProducts.slice(0, 21);
+                    // Ultimi 9 prodotti per la griglia (o meno se non ci sono abbastanza prodotti)
+                    const gridProducts = filteredProducts.slice(21, 30);
                     
-                    // Crea data-track dal titolo (primi 25 caratteri, lowercase, slug format)
-                    const trackValue = 'product-' + product.title.substring(0, 25).toLowerCase()
-                        .replace(/[^a-z0-9\s]/g, '')
-                        .replace(/\s+/g, '-')
-                        .replace(/-+$/, '');
-                    card.setAttribute('data-track', trackValue);
+                    // Mostra il carosello
+                    carouselContainer.style.display = 'block';
+                    renderProductsCarousel(carouselProducts, carouselContainer);
                     
-                    // Imposta l'href direttamente
-                    card.href = product.link;
-                    
-                    card.innerHTML = `
-                        <div class="product-image">
-                            <img src="${product.imageLink}" alt="${product.title}" itemprop="image" loading="lazy">
-                        </div>
-                        <h2 class="product-title" itemprop="name">${product.title}</h2>
-                        <div class="product-price" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
-                            <meta itemprop="priceCurrency" content="EUR">
-                            <span itemprop="price">${product.price}</span>
-                        </div>
-                        <button class="product-share-btn" data-track="product-share-btn" data-product-url="${product.link}" data-product-title="${product.title.replace(/"/g, '&quot;')}" aria-label="Condividi questo prodotto"></button>
-                    `;
-                    
-                    // Event listener per il click sulla card (tracking e audio)
-                    card.onclick = (e) => {
-                        // Se il click è sul pulsante condividi, non aprire il prodotto
-                        if (e.target.classList.contains('product-share-btn')) {
-                            e.preventDefault();
-                            return;
-                        }
-                        
-                        // Track evento Beampipe
-                        if (card.dataset.track && window.beampipe) {
-                            window.beampipe(card.dataset.track);
-                        }
-                        
-                        // Riproduci il suono
-                        playBlip();
-                    };
-                    
-                    // Event listener per il pulsante condividi
-                    const shareBtn = card.querySelector('.product-share-btn');
-                    shareBtn.onclick = async (e) => {
-                        e.stopPropagation(); // Previeni il click sulla card
-                        e.preventDefault(); // Previeni la navigazione del link
-                        
-                        playBlip();
-                        
-                        const shareUrl = shareBtn.dataset.productUrl;
-                        const shareTitle = shareBtn.dataset.productTitle;
-                        
-                        // Track evento
-                        if (window.beampipe) {
-                            window.beampipe('product-share-mobile-' + trackValue);
-                        }
-                        
-                        // Usa la Web Share API (disponibile su mobile)
-                        if (navigator.share) {
-                            try {
-                                await navigator.share({
-                                    title: shareTitle,
-                                    text: `Guarda questo regalo: ${shareTitle}`,
-                                    url: shareUrl
-                                });
-                                
-                                // Track condivisione riuscita
-                                if (window.beampipe) {
-                                    window.beampipe('product-share-success');
-                                }
-                            } catch (error) {
-                                // L'utente ha annullato la condivisione
-                                console.log('Condivisione annullata:', error);
-                            }
-                        } else {
-                            // Fallback: copia il link negli appunti
-                            try {
-                                await navigator.clipboard.writeText(shareUrl);
-                                alert('Link copiato negli appunti!');
-                                
-                                if (window.beampipe) {
-                                    window.beampipe('product-link-copied');
-                                }
-                            } catch (error) {
-                                console.log('Errore nella copia del link:', error);
-                            }
-                        }
-                    };
-                    
-                    grid.appendChild(card);
-                });
+                    // Mostra la griglia con gli ultimi 9 prodotti
+                    grid.style.display = 'grid';
+                    gridProducts.forEach(product => {
+                        grid.appendChild(createProductCard(product));
+                    });
+                } else {
+                    // Modalità normale: mostra tutti i prodotti nella griglia
+                    grid.style.display = 'grid';
+                    filteredProducts.forEach(product => {
+                        grid.appendChild(createProductCard(product));
+                    });
+                }
             }
+        }
+        
+        // Funzione per creare una card prodotto (estratta per riutilizzo)
+        function createProductCard(product) {
+            const card = document.createElement('a');
+            card.className = 'product-card show';
+            card.setAttribute('role', 'listitem');
+            card.setAttribute('itemscope', '');
+            card.setAttribute('itemtype', 'https://schema.org/Product');
+            card.setAttribute('target', '_blank');
+            card.setAttribute('rel', 'noopener noreferrer');
+            
+            // Crea data-track dal titolo (primi 25 caratteri, lowercase, slug format)
+            const trackValue = 'product-' + product.title.substring(0, 25).toLowerCase()
+                .replace(/[^a-z0-9\s]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+$/, '');
+            card.setAttribute('data-track', trackValue);
+            
+            // Imposta l'href direttamente
+            card.href = product.link;
+            
+            card.innerHTML = `
+                <div class="product-image">
+                    <img src="${product.imageLink}" alt="${product.title}" itemprop="image" loading="lazy">
+                </div>
+                <h2 class="product-title" itemprop="name">${product.title}</h2>
+                <div class="product-price" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+                    <meta itemprop="priceCurrency" content="EUR">
+                    <span itemprop="price">${product.price}</span>
+                </div>
+                <button class="product-share-btn" data-track="product-share-btn" data-product-url="${product.link}" data-product-title="${product.title.replace(/"/g, '&quot;')}" aria-label="Condividi questo prodotto"></button>
+            `;
+            
+            // Event listener per il click sulla card (tracking e audio)
+            card.onclick = (e) => {
+                // Se il click è sul pulsante condividi, non aprire il prodotto
+                if (e.target.classList.contains('product-share-btn')) {
+                    e.preventDefault();
+                    return;
+                }
+                
+                // Track evento Beampipe
+                if (card.dataset.track && window.beampipe) {
+                    window.beampipe(card.dataset.track);
+                }
+                
+                // Riproduci il suono
+                playBlip();
+            };
+            
+            // Event listener per il pulsante condividi
+            const shareBtn = card.querySelector('.product-share-btn');
+            shareBtn.onclick = async (e) => {
+                e.stopPropagation(); // Previeni il click sulla card
+                e.preventDefault(); // Previeni la navigazione del link
+                
+                playBlip();
+                
+                const shareUrl = shareBtn.dataset.productUrl;
+                const shareTitle = shareBtn.dataset.productTitle;
+                
+                // Track evento
+                if (window.beampipe) {
+                    window.beampipe('product-share-mobile-' + trackValue);
+                }
+                
+                // Usa la Web Share API (disponibile su mobile)
+                if (navigator.share) {
+                    try {
+                        await navigator.share({
+                            title: shareTitle,
+                            text: `Guarda questo regalo: ${shareTitle}`,
+                            url: shareUrl
+                        });
+                        
+                        // Track condivisione riuscita
+                        if (window.beampipe) {
+                            window.beampipe('product-share-success');
+                        }
+                    } catch (error) {
+                        // L'utente ha annullato la condivisione
+                        console.log('Condivisione annullata:', error);
+                    }
+                } else {
+                    // Fallback: copia il link negli appunti
+                    try {
+                        await navigator.clipboard.writeText(shareUrl);
+                        alert('Link copiato negli appunti!');
+                        
+                        if (window.beampipe) {
+                            window.beampipe('product-link-copied');
+                        }
+                    } catch (error) {
+                        console.log('Errore nella copia del link:', error);
+                    }
+                }
+            };
+            
+            return card;
+        }
+        
+        // Funzione per renderizzare il carosello nella pagina principale
+        function renderProductsCarousel(productsArray, container) {
+            // Crea la struttura del carosello simile a quella della modale
+            container.innerHTML = `
+                <div class="main-carousel-wrapper">
+                    <h2 class="carousel-title">✨ Scopri queste idee regalo</h2>
+                    <div class="gift-carousel-container">
+                        <button class="carousel-nav prev" aria-label="Prodotto precedente">❮</button>
+                        <div class="gift-carousel-wrapper">
+                            <div class="gift-carousel">
+                                ${productsArray.map((product, index) => {
+                                    const displayTitle = product.title.length > 77 
+                                        ? product.title.substring(0, 77) + '...'
+                                        : product.title;
+                                    
+                                    return `
+                                        <div class="gift-carousel-item" data-index="${index}">
+                                            <a href="${product.link}"
+                                               target="_blank"
+                                               rel="noopener noreferrer"
+                                               class="product-card show" 
+                                               itemscope 
+                                               itemtype="https://schema.org/Product"
+                                               onclick="playBlip(); if (window.beampipe) { window.beampipe('product-main-carousel-${product.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 25)}'); }"
+                                               style="cursor: pointer; display: block;">
+                                                <meta itemprop="url" content="${product.link}">
+                                                <img src="${product.imageLink}" 
+                                                     alt="${product.title}" 
+                                                     class="product-image" 
+                                                     itemprop="image"
+                                                     loading="lazy">
+                                                <h3 class="product-title" itemprop="name">${displayTitle}</h3>
+                                                <div class="product-price" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+                                                    <span itemprop="price">${product.price}</span>
+                                                    <meta itemprop="priceCurrency" content="EUR">
+                                                </div>
+                                            </a>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                        <button class="carousel-nav next" aria-label="Prodotto successivo">❯</button>
+                    </div>
+                    <div class="carousel-indicators">
+                        ${productsArray.map((_, index) => 
+                            `<button class="carousel-indicator ${index === 0 ? 'active' : ''}" data-index="${index}" aria-label="Vai al prodotto ${index + 1}"></button>`
+                        ).join('')}
+                    </div>
+                </div>
+            `;
+            
+            // Inizializza la logica del carosello
+            initMainCarousel(container, productsArray.length);
+        }
+        
+        // Funzione per inizializzare il carosello principale
+        function initMainCarousel(container, totalItems) {
+            let currentIndex = 0;
+            
+            const carousel = container.querySelector('.gift-carousel');
+            const prevBtn = container.querySelector('.carousel-nav.prev');
+            const nextBtn = container.querySelector('.carousel-nav.next');
+            const indicators = container.querySelectorAll('.carousel-indicator');
+            const items = container.querySelectorAll('.gift-carousel-item');
+            
+            function getCarouselDimensions() {
+                const isMobile = window.innerWidth <= 768;
+                const viewportWidth = window.innerWidth;
+                
+                if (isMobile) {
+                    const itemWidth = Math.min(viewportWidth * 0.65, 250);
+                    return {
+                        itemWidth: itemWidth,
+                        itemGap: 15
+                    };
+                } else {
+                    return {
+                        itemWidth: 280,
+                        itemGap: 20
+                    };
+                }
+            }
+            
+            function calculateOffset(index) {
+                const dims = getCarouselDimensions();
+                const itemWidth = dims.itemWidth;
+                const itemGap = dims.itemGap;
+                const totalItemWidth = itemWidth + itemGap;
+                
+                const carouselContainer = container.querySelector('.gift-carousel-container');
+                if (!carouselContainer) return 0;
+                
+                const containerWidth = carouselContainer.offsetWidth;
+                const centerPosition = containerWidth / 2 - itemWidth / 2;
+                const itemPosition = index * totalItemWidth;
+                
+                return centerPosition - itemPosition;
+            }
+            
+            function updateCarousel(animate = true) {
+                items.forEach((item, index) => {
+                    if (index === currentIndex) {
+                        item.classList.add('center');
+                    } else {
+                        item.classList.remove('center');
+                    }
+                });
+                
+                indicators.forEach((indicator, index) => {
+                    if (index === currentIndex) {
+                        indicator.classList.add('active');
+                    } else {
+                        indicator.classList.remove('active');
+                    }
+                });
+                
+                const offset = calculateOffset(currentIndex);
+                if (animate) {
+                    carousel.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+                } else {
+                    carousel.style.transition = 'none';
+                }
+                carousel.style.transform = `translateX(${offset}px)`;
+            }
+            
+            function goToNext() {
+                currentIndex = (currentIndex + 1) % totalItems;
+                updateCarousel();
+                playBlip();
+            }
+            
+            function goToPrev() {
+                currentIndex = (currentIndex - 1 + totalItems) % totalItems;
+                updateCarousel();
+                playBlip();
+            }
+            
+            prevBtn.addEventListener('click', goToPrev);
+            nextBtn.addEventListener('click', goToNext);
+            
+            indicators.forEach((indicator, index) => {
+                indicator.addEventListener('click', () => {
+                    currentIndex = index;
+                    updateCarousel();
+                    playBlip();
+                });
+            });
+            
+            // Touch/swipe support
+            let startX = 0;
+            let currentX = 0;
+            let isDragging = false;
+            
+            carousel.addEventListener('touchstart', (e) => {
+                startX = e.touches[0].clientX;
+                isDragging = true;
+            });
+            
+            carousel.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                currentX = e.touches[0].clientX;
+            });
+            
+            carousel.addEventListener('touchend', () => {
+                if (!isDragging) return;
+                
+                const diff = startX - currentX;
+                if (Math.abs(diff) > 50) {
+                    if (diff > 0) {
+                        goToNext();
+                    } else {
+                        goToPrev();
+                    }
+                }
+                
+                isDragging = false;
+            });
+            
+            // Responsive resize
+            window.addEventListener('resize', () => updateCarousel(false));
+            
+            // Inizializza
+            updateCarousel(false);
         }
 
         // Carica i prodotti all'avvio della pagina
